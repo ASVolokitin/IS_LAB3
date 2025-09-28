@@ -13,7 +13,7 @@ public record  TicketRequest (
     @NotBlank
     String name,
 
-    @NotNull
+    @NotNull   
     Long coordinatesId,
 
     Long personId,

@@ -3,8 +3,11 @@ package com.ticket_is.app.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.ticket_is.app.dto.request.SellTicketRequest;
 import com.ticket_is.app.dto.request.TicketRequest;
+import com.ticket_is.app.dto.sql.CoordinatesTicketCount;
 import com.ticket_is.app.exception.notFoundException.CoordinatesNotFoundException;
 import com.ticket_is.app.exception.notFoundException.EventNotFoundException;
 import com.ticket_is.app.exception.notFoundException.PersonNotFoundException;
@@ -17,6 +20,7 @@ import com.ticket_is.app.repository.PersonRepository;
 import com.ticket_is.app.repository.TicketRepository;
 import com.ticket_is.app.repository.VenueRepository;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -28,6 +32,8 @@ public class TicketService {
     private final PersonRepository personRepository;
     private final EventRepository eventRepository;
     private final VenueRepository venueRepository;
+
+    private final EntityManager em;
 
     public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
@@ -77,4 +83,31 @@ public class TicketService {
 
         ticketRepository.save(ticket);
     }
-}   
+
+    public List<CoordinatesTicketCount> countTicketsGroupedByCoordinates() {
+        return ticketRepository.countTicketsGroupedByCoordinates();
+    }
+
+    public Long countTicketsByNumberEquals(double number) {
+        return ticketRepository.countTicketsByNumberEquals(number);
+    }
+
+    public Long countTicketsByNumberLess(double number) {
+        return ticketRepository.countTicketsByNumberLess(number);
+    }
+
+    @Transactional
+    public void sellTicketByPrice(SellTicketRequest request) {
+        if (!ticketRepository.existsById(request.ticketId())) throw new TicketNotFoundException(request.ticketId());
+        if (!personRepository.existsById(request.buyerId())) throw new PersonNotFoundException(request.ticketId());
+        
+        ticketRepository.sellTicketByPrice(request.buyerId(), request.ticketId(), request.price());
+        em.getEntityManagerFactory().getCache().evictAll();
+    }
+
+    @Transactional
+    public void unbookByPersonId(Long personId) {
+        ticketRepository.unbookByPersonId(personId);
+        em.getEntityManagerFactory().getCache().evictAll();
+    }
+ }   
