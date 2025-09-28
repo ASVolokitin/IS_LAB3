@@ -1,6 +1,5 @@
 package com.ticket_is.app.dto.request;
 
-import com.ticket_is.app.model.Location;
 import com.ticket_is.app.model.enums.Color;
 import com.ticket_is.app.model.enums.Country;
 
@@ -12,13 +11,12 @@ import jakarta.validation.constraints.Size;
 public record PersonRequest(
 
     @NotNull
-    String eyeColor,
+    Color eyeColor,
 
     @NotNull
-    String hairColor,
+    Color hairColor,
 
-    @Valid
-    Location location,
+    Long locationId,
 
     @NotBlank
     @Size(max=29)
@@ -27,12 +25,4 @@ public record PersonRequest(
     @Valid
     Country nationality
 
-) {
-    public Color getEyeColor() {
-        return Color.valueOf(eyeColor);
-    }
-
-    public Color getHairColor() {
-        return Color.valueOf(hairColor);
-    }
-}
+) {}

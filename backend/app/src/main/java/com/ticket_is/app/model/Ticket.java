@@ -1,6 +1,7 @@
 package com.ticket_is.app.model;
 
 import java.io.Serializable;
+import java.util.Date;
 
 import com.ticket_is.app.model.enums.TicketType;
 
@@ -13,7 +14,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
@@ -44,6 +48,7 @@ public class Ticket implements Serializable{
     
     @NotNull
     @Column(name="creation_date")
+    @Temporal(TemporalType.TIMESTAMP)
     private java.util.Date creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
     
     @ManyToOne
@@ -78,4 +83,23 @@ public class Ticket implements Serializable{
     @JoinColumn(name = "venue_id")
     @NotNull
     private Venue venue; //Поле не может быть null
+
+
+    public Ticket(String name, Coordinates coordinates, Person person, Event event, Long price, TicketType type, Float discount, double number, Boolean refundable, Venue venue) {
+        this.name = name;
+        this.coordinates = coordinates;
+        this.person = person;
+        this.event = event;
+        this.price = price;
+        this.type = type;
+        this.discount = discount;
+        this.number = number;
+        this.refundable = refundable;
+        this.venue = venue;
+    }
+
+    @PrePersist
+    private void onCreate() {
+        creationDate = new Date();
+    }
 }

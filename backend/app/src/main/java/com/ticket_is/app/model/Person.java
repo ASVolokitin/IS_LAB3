@@ -34,16 +34,14 @@ public class Person implements Serializable {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    // @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Convert(converter = ColorEnumConverter.class)
-
-    @Column(name="eye_color", columnDefinition = "color_type")
+    @Column(name="eye_color")
     @NotNull
     private Color eyeColor; //Поле не может быть null
 
     @Enumerated(EnumType.STRING)
-    // @Convert(converter = ColorEnumConverter.class)
-    @Column(name="hair_color", columnDefinition = "color_type")
+    @Convert(converter = ColorEnumConverter.class)
+    @Column(name="hair_color")
     @NotNull
     private Color hairColor; //Поле не может быть null
 
@@ -57,7 +55,6 @@ public class Person implements Serializable {
     private String passportID; //Строка не может быть пустой, Длина строки не должна быть больше 29, Значение этого поля должно быть уникальным, Поле может быть null
     
     @Enumerated(EnumType.STRING)
-    @Valid
     private Country nationality; //Поле может быть null
 
     public Person(Color eyeColor, Color hairColor, Location location, String passportID, Country nationality) {

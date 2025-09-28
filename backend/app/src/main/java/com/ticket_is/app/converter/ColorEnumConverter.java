@@ -12,7 +12,7 @@ public class ColorEnumConverter implements AttributeConverter<Color, String> {
     @Override
     public String convertToDatabaseColumn(Color attribute) {
         if (attribute == null) return null;
-        return attribute.name() + "::color_type";
+        return attribute.name();
     }
 
     @Override
