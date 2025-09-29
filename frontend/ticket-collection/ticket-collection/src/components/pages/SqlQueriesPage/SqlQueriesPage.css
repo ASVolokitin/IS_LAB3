@@ -1,0 +1,38 @@
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  justify-items: center;
+  align-items: stretch;
+  animation: fadeInContainer 0.5s ease forwards;
+}
+
+@keyframes fadeInContainer {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cards-container .card-spotlight {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cards-container .card-spotlight:hover {
+  transform: translateY(3px) scale(1.03);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+
+.input-value-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+

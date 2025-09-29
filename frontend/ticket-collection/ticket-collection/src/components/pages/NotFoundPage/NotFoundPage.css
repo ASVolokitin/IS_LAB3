@@ -1,0 +1,16 @@
+.page-container {
+    display: flex;
+    height: 80vh;
+    justify-content: center;
+}
+
+.text-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+}
+
+p {
+    opacity: 50%;
+}
