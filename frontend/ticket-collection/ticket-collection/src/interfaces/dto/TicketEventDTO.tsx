@@ -1,6 +1,6 @@
 export interface TicketEventDTO {
-    name: string;
-    date: Date;
-    minAge: number;
-    description: string;
+    name: string | null;
+    date: Date | null;
+    minAge: number | null;
+    description: string | null;
 }

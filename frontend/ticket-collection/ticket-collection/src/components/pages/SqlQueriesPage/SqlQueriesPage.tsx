@@ -52,7 +52,7 @@ export const SqlQueriesPage = () => {
 
   const cancelBookings = async () => {
     if (!cancelBookingPersonIdField) {
-      console.error("personId не задан");
+      console.error("personId is not specified");
       return;
     }
     cancelBookingsByPersonId(cancelBookingPersonIdField)

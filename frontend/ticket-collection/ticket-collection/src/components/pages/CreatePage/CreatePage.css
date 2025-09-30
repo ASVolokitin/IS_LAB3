@@ -1,0 +1,10 @@
+.form-page {
+  min-height: 100vh;
+  background: #0f0f0f;
+  padding: 160px 20px;
+}
+
+.full-form-container {
+  max-width: 600px;
+  margin: 0 auto;
+}

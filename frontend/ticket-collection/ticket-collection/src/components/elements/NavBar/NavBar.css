@@ -190,7 +190,6 @@
   }
 }
 
-/* Адаптивность */
 @media (max-width: 768px) {
   .navigation {
     padding: 1rem;

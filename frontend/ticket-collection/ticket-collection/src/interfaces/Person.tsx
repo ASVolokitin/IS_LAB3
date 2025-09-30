@@ -1,10 +1,12 @@
+import { Color } from "../types/Color";
+import { Country } from "../types/Country";
 import { Location } from "./Location";
 
 export interface Person {
     id: number;
-    eyeColor: string;
-    hairColor: string;
+    eyeColor: Color;
+    hairColor: Color;
     location: Location
     passportID: string;
-    nationality: string;
+    nationality: Country;
 }

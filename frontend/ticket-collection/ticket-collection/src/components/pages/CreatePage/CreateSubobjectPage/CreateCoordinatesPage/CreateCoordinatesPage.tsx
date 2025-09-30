@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import NavBar from "../../../elements/NavBar/NavBar";
+import NavBar from "../../../../elements/NavBar/NavBar";
 
-import "../../../pages/CreateSubobjectPage/CreateSubobjectPage.css";
-import "../../../elements/Input/Input.css";
-import { CoordinatesDTO } from "../../../../interfaces/dto/CoordinatesDTO";
-import { createCoordinates } from "../../../../services/api";
+import "../../CreateSubobjectPage/CreateSubobjectPage.css"
+import "../../../../elements/Input/Input.css";
+import { CoordinatesDTO } from "../../../../../interfaces/dto/CoordinatesDTO";
+import { createCoordinates } from "../../../../../services/api";
 
 export const CreateCoordinatesPage = () => {
   const navigate = useNavigate();

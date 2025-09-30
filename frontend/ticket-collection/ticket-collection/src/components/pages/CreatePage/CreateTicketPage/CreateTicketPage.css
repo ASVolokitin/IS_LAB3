@@ -1,14 +1,3 @@
-.ticket-form-page {
-  min-height: 100vh;
-  background: #0f0f0f;
-  padding: 160px 20px;
-}
-
-.ticket-form-container {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
 .form-container h1 {
   color: #ffffff;
   font-size: 32px;
@@ -68,10 +57,6 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
-}
-
-.object-field-controls select {
-  flex: 1;
 }
 
 .object-field-controls .outline-button {

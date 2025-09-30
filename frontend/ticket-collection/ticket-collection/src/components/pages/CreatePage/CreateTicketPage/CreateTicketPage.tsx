@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./CreateTicketPage.css";
-import '../../elements/Dropbox/Dropbox.css'
-import NavBar from "../../elements/NavBar/NavBar";
-import { createTicket, getCoordinates, getEvents, getPersons, getVenues } from "../../../services/api";
-import { Coordinates } from "../../../interfaces/Сoordinates";
-import { Person } from "../../../interfaces/Person";
-import { Venue } from "../../../interfaces/Venue";
-import { TicketEvent } from "../../../interfaces/TicketEvent";
-import { TicketDTO } from "../../../interfaces/dto/TicketDTO";
+import "../../CreatePage/CreatePage.css"
+import '../../../elements/Select/Select.css'
+import NavBar from "../../../elements/NavBar/NavBar";
+import { createTicket, getCoordinates, getEvents, getPersons, getVenues } from "../../../../services/api";
+import { Coordinates } from "../../../../interfaces/Сoordinates";
+import { Person } from "../../../../interfaces/Person";
+import { Venue } from "../../../../interfaces/Venue";
+import { TicketEvent } from "../../../../interfaces/TicketEvent";
+import { TicketDTO } from "../../../../interfaces/dto/TicketDTO";
 
-import '../../elements/Input/Input.css'
+import '../../../elements/Input/Input.css'
+import { TICKET_TYPES } from "../../../../types/TicketType";
 
 
 export const CreateTicketPage = () => {
@@ -165,8 +167,8 @@ export const CreateTicketPage = () => {
   return (
     <>
       <NavBar />
-      <div className="ticket-form-page">
-        <div className="ticket-form-container">
+      <div className="form-page">
+        <div className="full-form-container">
           <h1>Create new ticket</h1>
 
           <form onSubmit={handleSubmit} className="ticket-form">
@@ -178,6 +180,7 @@ export const CreateTicketPage = () => {
                 <input
                   id="name"
                   type="text"
+                  maxLength={255}
                   className={`glass-select ${errors.name ? "input-error" : ""}`}
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
@@ -262,11 +265,9 @@ export const CreateTicketPage = () => {
                   value={formData.type}
                   onChange={(e) => handleChange("type", e.target.value)}
                 >
-                  <option value="">-</option>
-                  <option value="VIP">VIP</option>
-                  <option value="USUAL">USUAL</option>
-                  <option value="BUDGETARY">BUDGETARY</option>
-                  <option value="CHEAP">CHEAP</option>
+                  {Object.entries(TICKET_TYPES).map(([key, value]) => (
+                    <option key={key} value={value}>{key}</option>
+                  ))}
                 </select>
               </div>
             </div>

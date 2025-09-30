@@ -1,4 +1,3 @@
-/* Стили для основного select */
 .glass-select {
   background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(10px);
@@ -37,7 +36,6 @@
   cursor: not-allowed;
 }
 
-/* Стили для option элементов */
 .glass-select option {
   background: #1a1a1a;
   color: #ffffff;
@@ -59,3 +57,4 @@
 .glass-select option:focus {
   background: #2a2a2a;
 }
+

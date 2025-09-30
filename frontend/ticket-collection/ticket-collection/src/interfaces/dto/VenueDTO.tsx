@@ -1,5 +1,5 @@
 export interface VenueDTO {
     name: string;
     capacity: number;
-    type: string;
+    type: string | null;
 }

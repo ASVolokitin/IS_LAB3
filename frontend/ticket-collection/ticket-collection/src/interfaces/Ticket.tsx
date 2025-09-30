@@ -2,6 +2,7 @@ import { TicketEvent } from "./TicketEvent";
 import { Person } from "./Person";
 import { Venue } from "./Venue";
 import { Coordinates } from "./Сoordinates";
+import { TicketType } from "../types/TicketType";
 
 export interface Ticket {
     id: number;
@@ -11,7 +12,7 @@ export interface Ticket {
     person: Person;
     event: TicketEvent;
     price: number;
-    type: string;
+    type: TicketType;
     discount: number;
     number: number;
     refundable: boolean;

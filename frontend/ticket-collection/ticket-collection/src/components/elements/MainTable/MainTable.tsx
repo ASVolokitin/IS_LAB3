@@ -13,7 +13,6 @@ const MainTable = () => {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
   const [data, setData] = useState<Ticket[]>([]);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const updateTickets = () => {
     getTickets()
@@ -104,7 +103,6 @@ const MainTable = () => {
         {sortedData.map((row) => (
           <tr
             key={row.id}
-            className={deletingId === row.id ? "tr-deleting" : ""}
           >
             {columns.map((col) => (
               <td key={col.field}>{renderCell(row, col.field)}</td>
