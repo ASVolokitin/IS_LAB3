@@ -1,4 +1,10 @@
 import axios from "axios"
+import { TicketDTO } from "../interfaces/dto/TicketDTO";
+import { CoordinatesDTO } from "../interfaces/dto/CoordinatesDTO";
+import { PersonDTO } from "../interfaces/dto/PersonDTO";
+import { TicketEventDTO } from "../interfaces/dto/TicketEventDTO";
+import { VenueDTO } from "../interfaces/dto/VenueDTO";
+import { LocationDTO } from "../interfaces/dto/LocationDTO";
 
 const BASE_URL = "http://localhost:8081"
 
@@ -13,13 +19,41 @@ export const getTickets = () => api.get("/tickets");
 
 export const getCoordinates = () => api.get("/coordinates");
 
-export const gerPersons = () => api.get("/persons");
+export const getPersons = () => api.get("/persons");
 
 export const getEvents = () => api.get("/events");
 
 export const getVenues = () => api.get("/venues");
 
 export const getLocations = () => api.get("/locations");
+
+
+
+export const createTicket = (ticketData: TicketDTO) => api.post("/tickets", ticketData);
+
+export const createCoordinates = (coordinatesData: CoordinatesDTO) => api.post("/coordinates", coordinatesData);
+
+export const createPerson = (personData: PersonDTO) => api.post("/persons", personData);
+
+export const createEvent = (eventData: TicketEventDTO) => api.post("/events", eventData);
+
+export const createVenue = (venueData: VenueDTO) => api.post("/venues", venueData);
+
+export const createLocation = (locationData: LocationDTO) => api.post("/locations", locationData);
+
+
+
+export const deleteTicket = (ticketId: number) => api.delete(`/tickets/${ticketId}`);
+
+export const deletePerson = (personId: number) => api.delete(`/persons/${personId}`);
+
+export const deleteLocation = (locationId: number) => api.delete(`/locations/${locationId}`);
+
+export const deleteEvent = (eventId: number) => api.delete(`/events/${eventId}`);
+
+export const deleteCoordinates = (coordinatesId: number) => api.delete(`/coordinates/${coordinatesId}`);
+
+export const deleteVenue = (venueId: number) => api.delete(`/venues/${venueId}`);
 
 
 
