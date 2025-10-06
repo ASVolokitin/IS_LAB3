@@ -1,13 +1,17 @@
 package com.ticket_is.app.service;
 
 import java.util.List;
+import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ticket_is.app.dto.request.SellTicketRequest;
 import com.ticket_is.app.dto.request.TicketRequest;
 import com.ticket_is.app.dto.sql.CoordinatesTicketCount;
+import com.ticket_is.app.exception.PersonAlreadyOwnsThisTicketException;
 import com.ticket_is.app.exception.notFoundException.CoordinatesNotFoundException;
 import com.ticket_is.app.exception.notFoundException.EventNotFoundException;
 import com.ticket_is.app.exception.notFoundException.PersonNotFoundException;
@@ -37,6 +41,10 @@ public class TicketService {
 
     public List<Ticket> getAllTickets() {
         return ticketRepository.findAll();
+    }
+
+    public Page<Ticket> getTicketsPage(Pageable pageable) {
+        return ticketRepository.findAll(pageable);
     }
 
     public Ticket getTicketById(Long id) {
@@ -100,14 +108,24 @@ public class TicketService {
     public void sellTicketByPrice(SellTicketRequest request) {
         if (!ticketRepository.existsById(request.ticketId())) throw new TicketNotFoundException(request.ticketId());
         if (!personRepository.existsById(request.buyerId())) throw new PersonNotFoundException(request.ticketId());
+
+        Ticket ticket = getTicketById(request.ticketId());
+        if (ticket.getPerson() != null && Objects.equals(ticket.getPerson().getId(), request.buyerId())) {
+            throw new PersonAlreadyOwnsThisTicketException(String.format("Person with passport %s already own this ticket", ticket.getPerson().getPassportID()));
+        }
         
         ticketRepository.sellTicketByPrice(request.buyerId(), request.ticketId(), request.price());
+
         em.getEntityManagerFactory().getCache().evictAll();
     }
 
     @Transactional
-    public void unbookByPersonId(Long personId) {
-        ticketRepository.unbookByPersonId(personId);
+    public int unbookByPersonId(Long personId) {
+        if (!personRepository.existsById(personId)) throw new PersonNotFoundException(personId);
+        int modifiedRowsAmount = ticketRepository.unbookByPersonId(personId);
+
         em.getEntityManagerFactory().getCache().evictAll();
+
+        return modifiedRowsAmount;
     }
  }   

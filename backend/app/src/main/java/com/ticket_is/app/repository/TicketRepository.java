@@ -36,6 +36,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     @Modifying
     @Query(value="UPDATE tickets SET person_id = NULL where person_id = ?1", nativeQuery=true)
-    public void unbookByPersonId(Long personId);
-
+    public int unbookByPersonId(Long personId);
 }

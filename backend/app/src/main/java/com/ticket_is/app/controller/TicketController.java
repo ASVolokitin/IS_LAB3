@@ -2,6 +2,7 @@ package com.ticket_is.app.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,9 +30,14 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<?> getAllCoordinates() {
         return new ResponseEntity<>(ticketService.getAllTickets(), HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getTicketsPage(Pageable pageable) {
+        return new ResponseEntity<>(ticketService.getTicketsPage(pageable), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -83,7 +89,7 @@ public class TicketController {
 
     @PostMapping("/unbook")
     public ResponseEntity<?> unbookTickets(@RequestParam Long personId) {
-        ticketService.unbookByPersonId(personId);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        int modifiedRowsAmount = ticketService.unbookByPersonId(personId);
+        return new ResponseEntity<>(modifiedRowsAmount, HttpStatus.OK);
     }
 }

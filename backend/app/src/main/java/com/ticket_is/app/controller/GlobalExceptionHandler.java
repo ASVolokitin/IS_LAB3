@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.ticket_is.app.dto.response.ErrorResponse;
+import com.ticket_is.app.exception.PersonAlreadyOwnsThisTicketException;
 import com.ticket_is.app.exception.notFoundException.ResourceNotFoundException;
 
 import jakarta.validation.ConstraintViolation;
@@ -36,6 +37,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(PersonAlreadyOwnsThisTicketException.class)
+    public ResponseEntity<?> handlePersonAlreadyOwnsThisTicketException(PersonAlreadyOwnsThisTicketException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), "Chosen person already owns this ticket");
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), "Operation was denied by SQL constraint violation");
@@ -54,11 +61,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException exception) {
-        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), "Argument format error");
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
+    // @ExceptionHandler(IllegalArgumentException.class)
+    // public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException exception) {
+    //     ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), "Argument format error");
+    //     return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    // }
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
