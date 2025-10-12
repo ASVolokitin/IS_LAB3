@@ -1,0 +1,140 @@
+table {
+  padding-top: 180px;
+  border-spacing: 0 20px;
+  width: auto;
+  background: transparent;
+  margin: 0 auto; 
+  max-width: 90%; 
+}
+
+tr {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+tr::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  z-index: -1;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+tr:hover::before {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 10px 25px -3px rgba(0, 0, 0, 0.2),
+    0 4px 6px -2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+th {
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+th:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+th::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #7661C2, #5a46a0);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+th:hover::after {
+  width: 80%;
+}
+
+td {
+  position: relative;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
+  text-align: center; 
+  vertical-align: middle;
+}
+
+td:hover {
+  color: #ffffff;
+}
+
+.button-container {
+  position: relative;
+  height: 100%;
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  gap: 10px; 
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+.tr-deleting {
+  animation: fadeOut 0.4s ease forwards;
+}
+
+.table-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  padding: 60px 20px;
+}
+
+tbody tr {
+  animation: slideIn 0.5s ease forwards;
+}
+
+tbody tr:nth-child() {
+  animation-delay: 0.1;
+}

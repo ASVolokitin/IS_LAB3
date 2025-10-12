@@ -1,40 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Ticket } from "../../../interfaces/Ticket";
-import { deleteTicket, getTickets } from "../../../services/api";
 import React from "react";
-import { columns } from "../../../interfaces/dataRepresentation/mainTableCoumns";
+import { columns } from "../../../interfaces/dataRepresentation/mainTableColumns";
 import { getNestedValue, renderCell } from "../../../services/mainPageUtils";
 
 import "./../Button/Button.css";
+import { Filter } from "../../../interfaces/FilterInterface";
 
-const MainTable = () => {
+interface MainTableProps {
+  tickets: Ticket[];
+  filters: Filter;
+  onTicketDelete: (ticketId: number) => void;
+  onTicketDoubleClick: (ticket: Ticket) => void;
+}
+
+const MainTable = ({
+  tickets,
+  filters,
+  onTicketDelete,
+  onTicketDoubleClick,
+}: MainTableProps) => {
   type SortOrder = "asc" | "desc" | null;
 
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>(null);
-  const [data, setData] = useState<Ticket[]>([]);
-
-  const updateTickets = () => {
-    getTickets()
-      .then((res) => {
-        setData(res.data);
-        console.log(res.data);
-      })
-      .catch((err) => console.error(err));
-  };
-
-  useEffect(() => {
-    updateTickets();
-  }, []);
-
-  const handleDelete = async (ticketId: number) => {
-    try {
-      await deleteTicket(ticketId);
-      await updateTickets();
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleSort = (field: string) => {
     if (sortField !== field) {
@@ -49,9 +38,9 @@ const MainTable = () => {
   };
 
   const sortedData = React.useMemo(() => {
-    if (!sortField || !sortOrder) return data;
+    if (!sortField || !sortOrder) return tickets;
 
-    return [...data].sort((a, b) => {
+    return [...tickets].sort((a, b) => {
       const aValue = getNestedValue(a, sortField);
       const bValue = getNestedValue(b, sortField);
 
@@ -75,52 +64,59 @@ const MainTable = () => {
         ? String(aValue).localeCompare(String(bValue))
         : String(bValue).localeCompare(String(aValue));
     });
-  }, [data, sortField, sortOrder]);
+  }, [tickets, sortField, sortOrder]);
 
   return (
-    <table>
-      <thead>
-        <tr>
-          {columns.map((col) => (
-            <th
-              key={col.field}
-              onClick={() => handleSort(col.field)}
-              style={{ cursor: "pointer" }}
-            >
-              {col.label}
-              {sortField === col.field
-                ? sortOrder === "asc"
-                  ? " ↑"
-                  : sortOrder === "desc"
-                  ? " ↓"
-                  : ""
-                : ""}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {sortedData.map((row) => (
-          <tr
-            key={row.id}
-          >
+    <>
+      <table>
+        <thead>
+          <tr>
             {columns.map((col) => (
-              <td key={col.field}>{renderCell(row, col.field)}</td>
+              <th
+                key={col.field}
+                onClick={() => handleSort(col.field)}
+                style={{ cursor: "pointer" }}
+              >
+                {col.label}
+                {sortField === col.field
+                  ? sortOrder === "asc"
+                    ? " ↑"
+                    : sortOrder === "desc"
+                    ? " ↓"
+                    : ""
+                  : ""}
+              </th>
             ))}
-            <td>
-              <div className="button-container">
-                <button
-                  className="glass-button"
-                  onClick={() => handleDelete(row.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </td>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        {sortedData && (
+          <tbody>
+            {sortedData.map((row) => (
+              <tr onDoubleClick={() => onTicketDoubleClick(row)} key={row.id}>
+                {columns.map((col) => (
+                  <td key={col.field}>{renderCell(row, col.field)}</td>
+                ))}
+                <td>
+                  <div className="button-container">
+                    <button
+                      className="glass-button"
+                      onClick={() => onTicketDelete(row.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        )}
+      </table>
+      {sortedData.length === 0 && (
+          <div style={{textAlign: "center", alignItems: "center", width: "100%"}}>
+            <p>No tickets</p>
+          </div>
+        )}
+    </>
   );
 };
 

@@ -1,4 +1,4 @@
-import { VenueType } from "../types/VenueType";
+import { VenueType } from "../../types/VenueType";
 
 export interface VenueFormData {
   name: string;

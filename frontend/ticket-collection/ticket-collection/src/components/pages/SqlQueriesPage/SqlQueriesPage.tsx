@@ -14,8 +14,6 @@ import { Link } from "react-router-dom";
 import '../../elements/Input/Input.css'
 
 export const SqlQueriesPage = () => {
-  const [countGroupedByCoordinatesResult, setCountGroupedByCoordinatesResult] =
-    useState<number>(0);
 
   const [countByNumberEqualsField, setCountByNumberEqualsField] =
     useState<number>(0);

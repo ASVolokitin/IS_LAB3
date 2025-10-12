@@ -9,6 +9,7 @@ import { PersonDTO } from "../../../../../interfaces/dto/PersonDTO";
 import { COUNTRIES } from "../../../../../types/Country";
 import { createPerson, getLocations } from "../../../../../services/api";
 import { Location } from "../../../../../interfaces/Location";
+import { validatePersonField } from "../../../../../services/validator/personValidator";
 
 export const CreatePersonPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -34,32 +35,10 @@ export const CreatePersonPage = () => {
       .catch((err) => setServerStatus(err));
   };
 
-  const validateField = (name: keyof PersonDTO, value: any): string => {
-    switch (name) {
-      case "passportID":
-        if (value && value.trim() === "")
-          return "Passpord ID should not be blank";
-        if (value && value.length > 29)
-          return "Passport ID should not be longer than 29 symbols";
-        return "";
-
-      case "eyeColor":
-        if (!value) return "Eye color should be specified";
-        return "";
-
-      case "hairColor":
-        if (!value) return "Hair color should be specified";
-        return "";
-
-      default:
-        return "";
-    }
-  };
-
   const handleChange = (field: keyof PersonDTO, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    const error = validateField(field, value);
+    const error = validatePersonField(field, value);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
@@ -69,7 +48,7 @@ export const CreatePersonPage = () => {
     const newErrors: Record<string, string> = {};
 
     Object.keys(formData).forEach((key) => {
-      const error = validateField(
+      const error = validatePersonField(
         key as keyof PersonDTO,
         formData[key as keyof PersonDTO]
       );
@@ -100,6 +79,9 @@ export const CreatePersonPage = () => {
         else setServerStatus("Unable to send request");
       });
   };
+
+
+    
 
   const isFormValid = () => {
     return (

@@ -3,5 +3,5 @@ export interface Location {
     x: number;
     y: number;
     z: number;
-    name: string;
+    name: string | null;
 }

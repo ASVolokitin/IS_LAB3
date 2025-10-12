@@ -1,0 +1,121 @@
+.page-nav-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px;
+  margin-top: 32px;
+}
+
+.page-nav-button {
+  background: rgba(118, 97, 194, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(118, 97, 194, 0.3);
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-nav-button:hover {
+  background: rgba(118, 97, 194, 0.25);
+  border-color: rgba(118, 97, 194, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -3px rgba(118, 97, 194, 0.3);
+}
+
+.page-nav-button:active {
+  transform: translateY(0);
+}
+
+.page-nav-button:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.3);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.page-nav-pagenumber {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px 24px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.page-nav-numbers {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.page-number {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 44px;
+  text-align: center;
+}
+
+.page-number:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.page-number-active {
+  background: rgba(118, 97, 194, 0.2);
+  border-color: rgba(118, 97, 194, 0.4);
+  color: #ffffff;
+}
+
+.page-nav-ellipsis {
+  color: rgba(255, 255, 255, 0.5);
+  padding: 0 8px;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .page-nav-container {
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .page-nav-button {
+    padding: 10px 16px;
+    font-size: 14px;
+    min-width: 50px;
+  }
+  
+  .page-nav-pagenumber {
+    padding: 12px 20px;
+    font-size: 14px;
+    min-width: 100px;
+  }
+  
+  .page-number {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-width: 40px;
+  }
+}

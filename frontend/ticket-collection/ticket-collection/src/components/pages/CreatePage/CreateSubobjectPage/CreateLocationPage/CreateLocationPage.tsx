@@ -6,6 +6,7 @@ import "../CreateSubobjectPage.css";
 import "../../../../elements/Input/Input.css";
 import { createLocation } from "../../../../../services/api";
 import { LocationDTO } from "../../../../../interfaces/dto/LocationDTO";
+import { validateLocationField } from "../../../../../services/validator/locationValidator";
 
 export const CreateLocationPage = () => {
   const [serverStatus, setServerStatus] = useState("");
@@ -24,44 +25,21 @@ export const CreateLocationPage = () => {
     name: "",
   });
 
-  const validateField = (name: keyof LocationDTO, value: any): string => {
-    const numValue = Number(value);
-
-    switch (name) {
-      case "x":
-        if (value === "") return "X coordinate should be specified";
-        if (isNaN(numValue)) return "X coordinate should be a number";
-        return "";
-
-      case "y":
-        if (isNaN(numValue)) return "Y coordinate should be a number";
-        if (!Number.isInteger(numValue)) return "Y coordinate should be integer";
-        return "";
-
-      case "z":
-        if (value === "") return "Z coordinate should be specified";
-        if (isNaN(numValue)) return "Z coordinate should be a number";
-        return "";
-
-      default:
-        return "";
-    }
-  };
 
   const handleChange = (field: keyof LocationDTO, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    const error = validateField(field, value);
+    const error = validateLocationField(field, value);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const xError = validateField("x", formData.x);
-    const yError = validateField("y", formData.y);
-    const zError = validateField("z", formData.z);
-    const nameError = validateField("name", formData.name);
+    const xError = validateLocationField("x", formData.x);
+    const yError = validateLocationField("y", formData.y);
+    const zError = validateLocationField("z", formData.z);
+    const nameError = validateLocationField("name", formData.name);
 
     const newErrors = {
       x: xError,
@@ -88,16 +66,16 @@ export const CreateLocationPage = () => {
           if (err.response) {
             const serverErrorMessage = err.response.data.message;
             console.log(serverErrorMessage);
-            if (serverErrorMessage.includes("value too long")) setServerStatus("Chosen location name is too long");
+            if (serverErrorMessage.includes("value too long"))
+              setServerStatus("Chosen location name is too long");
             else
-            setServerStatus(
-              `ERROR: ${err.response.data.message}` || "Server error"
-            );
+              setServerStatus(
+                `ERROR: ${err.response.data.message}` || "Server error"
+              );
           } else if (err.request) setServerStatus("No response from server");
           else setServerStatus("Unable to send request");
         });
 
-      // navigate(-1);
     } catch (error) {
       console.error("Error creating location:", error);
     }
@@ -113,7 +91,7 @@ export const CreateLocationPage = () => {
 
   return (
     <>
-    <NavBar />
+      <NavBar />
       <div className="form-page">
         <div className="full-form-container">
           <h1>Create new location</h1>
@@ -127,7 +105,6 @@ export const CreateLocationPage = () => {
                 <input
                   id="x"
                   type="number"
-                  step="0.1"
                   className={`glass-input ${errors.x ? "input-error" : ""}`}
                   value={String(formData.x)}
                   onChange={(e) => handleChange("x", e.target.value)}
@@ -183,7 +160,7 @@ export const CreateLocationPage = () => {
               </div>
             </div>
             <div className="server-status-container">
-                <p>{serverStatus}</p>
+              <p>{serverStatus}</p>
             </div>
 
             <div className="form-actions">

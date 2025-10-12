@@ -2,7 +2,7 @@ import { Ticket } from "../Ticket";
 
 interface Column<T> {
   label: string;
-  field: keyof T | string; // string для вложенных полей типа "person.eyeColor"
+  field: keyof T | string;
 }
 
 export const columns: Column<Ticket>[] = [

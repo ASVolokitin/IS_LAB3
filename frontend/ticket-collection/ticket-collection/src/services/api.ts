@@ -5,6 +5,7 @@ import { PersonDTO } from "../interfaces/dto/PersonDTO";
 import { TicketEventDTO } from "../interfaces/dto/TicketEventDTO";
 import { VenueDTO } from "../interfaces/dto/VenueDTO";
 import { LocationDTO } from "../interfaces/dto/LocationDTO";
+import { SellTicketDTO } from "../interfaces/dto/SellTicketDTO";
 
 const BASE_URL = "http://localhost:8081"
 
@@ -15,7 +16,9 @@ const api = axios.create({
     },
 });
 
-export const getTickets = () => api.get("/tickets");
+export const getTicketsPage = (page: number, size: number) => api.get(`/tickets?page=${page}&size=${size}&sort=id,asc`);
+
+export const getAllTickets = () => api.get("/tickets/all");
 
 export const getCoordinates = () => api.get("/coordinates");
 
@@ -56,6 +59,19 @@ export const deleteCoordinates = (coordinatesId: number) => api.delete(`/coordin
 export const deleteVenue = (venueId: number) => api.delete(`/venues/${venueId}`);
 
 
+export const updateTicket = (ticketId: number, ticketData: TicketDTO) => api.put(`/tickets/${ticketId}`, ticketData);
+
+export const updateCoordinates = (coordinatesId: number, coordinatesData: CoordinatesDTO) => api.put(`/coordinates/${coordinatesId}`, coordinatesData);
+
+export const updatePerson = (personId: number, personData: PersonDTO) => api.put(`/persons/${personId}`, personData);
+
+export const updateEvent = (eventId: number, eventData: TicketEventDTO) => api.put(`/events/${eventId}`, eventData);
+
+export const updateVenue = (venueId: number, venueData: VenueDTO) => api.put(`/venues/${venueId}`, venueData);
+
+export const updateLocation = (locationId: number, locationData: LocationDTO) => api.put(`/locations/${locationId}`, locationData);
+
+
 
 export const getTicketsGroupedByCoordinates = () => api.get("/tickets/count_grouped_by_coordinates");
 
@@ -64,3 +80,5 @@ export const getTicketsAmountByNumberEquals = (number: number) => api.get("/tick
 export const getTicketsAmountByNumberLess = (number: number) => api.get("/tickets/count_by_number_less/" + number);
 
 export const cancelBookingsByPersonId = (personId: number) => api.post("/tickets/unbook?personId=" + personId);
+
+export const sellTicketToPerson = (sellTicketData: SellTicketDTO) => api.post("tickets/sell", sellTicketData)

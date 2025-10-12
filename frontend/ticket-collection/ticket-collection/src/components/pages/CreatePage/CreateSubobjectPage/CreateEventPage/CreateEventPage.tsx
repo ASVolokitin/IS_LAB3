@@ -4,9 +4,9 @@ import NavBar from "../../../../elements/NavBar/NavBar";
 
 import "../../CreateSubobjectPage/CreateSubobjectPage.css";
 import "../../../../elements/Input/Input.css";
-import { CoordinatesDTO } from "../../../../../interfaces/dto/CoordinatesDTO";
-import { createCoordinates, createEvent } from "../../../../../services/api";
-import { EventFormData } from "../../../../../formData/EventFormData";
+import { createEvent } from "../../../../../services/api";
+import { EventFormData } from "../../../../../interfaces/formData/EventFormData";
+import { validateEventField } from "../../../../../services/validator/eventValidator";
 
 export const CreateEventPage = () => {
   const navigate = useNavigate();
@@ -21,36 +21,11 @@ export const CreateEventPage = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateField = (name: keyof EventFormData, value: string): string => {
-    switch (name) {
-      case "name":
-        if (!value || value.trim() === "") return "Name should not be blank";
-        return "";
-
-      case "description":
-        if (!value || value.trim() === "")
-          return "Description should not be blank";
-        return "";
-
-      case "minAge":
-        return "";
-
-      case "date":
-        if (value) {
-          const selectedDate = new Date(value);
-          const today = new Date();
-        }
-        return "";
-
-      default:
-        return "";
-    }
-  };
-
   const handleChange = (field: keyof EventFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    console.log("new value", value);
 
-    const error = validateField(field, value);
+    const error = validateEventField(field, value);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
@@ -60,7 +35,7 @@ export const CreateEventPage = () => {
     const newErrors: Record<string, string> = {};
 
     Object.keys(formData).forEach((key) => {
-      const error = validateField(
+      const error = validateEventField(
         key as keyof EventFormData,
         formData[key as keyof EventFormData]
       );
@@ -89,7 +64,7 @@ export const CreateEventPage = () => {
           if (err.response) {
             const serverErrorMessage = err.response.data.message;
             console.log(serverErrorMessage);
-              setServerStatus(`ERROR: ${serverErrorMessage}` || "Server error");
+            setServerStatus(`ERROR: ${serverErrorMessage}` || "Server error");
           } else if (err.request) setServerStatus("No response from server");
           else setServerStatus("Unable to send request");
         });
@@ -106,11 +81,6 @@ export const CreateEventPage = () => {
       !formData.description ||
       Object.values(errors).some((error) => error !== "")
     );
-  };
-
-  const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
   };
 
   return (
@@ -164,11 +134,12 @@ export const CreateEventPage = () => {
                 <label htmlFor="date">Event date</label>
                 <input
                   id="date"
-                  type="date"
+                  type="datetime-local"
                   className={`glass-input ${errors.date ? "input-error" : ""}`}
                   value={formData.date}
+                  pattern="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}"
+                  step="300"
                   onChange={(e) => handleChange("date", e.target.value)}
-                  min={getMinDate()}
                 />
                 {errors.date && (
                   <span className="error-message">{errors.date}</span>
@@ -193,7 +164,7 @@ export const CreateEventPage = () => {
               </div>
               <div className="server-status-container">
                 <p>{serverStatus}</p>
-            </div>
+              </div>
             </div>
 
             <div className="form-actions">

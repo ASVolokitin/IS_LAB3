@@ -1,3 +1,9 @@
+.button-centered-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
 .glass-button {
   background: rgba(118, 97, 194, 0.15);
   backdrop-filter: blur(10px);

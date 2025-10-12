@@ -1,4 +1,5 @@
 export const TICKET_TYPES = {
+    NOT_STATED: null,
     VIP: "VIP",
     USUAL: "USUAL",
     BUDGETARY: "BUDGETARY",

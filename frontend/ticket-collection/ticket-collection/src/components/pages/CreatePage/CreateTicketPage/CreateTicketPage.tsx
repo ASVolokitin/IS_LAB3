@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./CreateTicketPage.css";
 import "../../CreatePage/CreatePage.css"
 import '../../../elements/Select/Select.css'
@@ -13,6 +13,7 @@ import { TicketDTO } from "../../../../interfaces/dto/TicketDTO";
 
 import '../../../elements/Input/Input.css'
 import { TICKET_TYPES } from "../../../../types/TicketType";
+import { validateTicketField } from "../../../../services/validator/ticketValidator";
 
 
 export const CreateTicketPage = () => {
@@ -49,19 +50,19 @@ export const CreateTicketPage = () => {
 
     getCoordinates()
       .then((res) => setCoordinates(res.data))
-      .catch((err) => setServerStatus(err));
+      .catch((err) => setServerStatus(err.message));
 
     getPersons()
       .then((res) => setPersons(res.data))
-      .catch((err) => setServerStatus(err));
+      .catch((err) => setServerStatus(err.message));
 
     getEvents()
       .then((res) => setEvents(res.data))
-      .catch((err) => setServerStatus(err));
+      .catch((err) => setServerStatus(err.message));
 
     getVenues()
       .then((res) => setVenues(res.data))
-      .catch((err) => setServerStatus(err));
+      .catch((err) => setServerStatus(err.message));
 
 
   };
@@ -79,45 +80,10 @@ export const CreateTicketPage = () => {
     "venueId",
   ];
 
-  const validateField = (name: keyof TicketDTO, value: any): string => {
-    switch (name) {
-      case "name":
-        if (!value || value.trim() === "") return "Name should not be blank";
-        return "";
-
-      case "price":
-        if (!value || Number(value) <= 0)
-          return "Price should be greater than 0";
-         if (!Number.isInteger(Number(value))) return 'Price should be an integer';
-        return "";
-
-      case "discount":
-        if (value && (Number(value) <= 0 || Number(value) > 100))
-          return "Discount should be between 0 and 100";
-        return "";
-
-      case "number":
-        if (!value || Number(value) <= 0)
-          return "Number should be greater than 0";
-        return "";
-
-      case "coordinatesId":
-        if (!value) return "You need to set coordinates";
-        return "";
-
-      case "venueId":
-        if (!value) return "You need to set venue";
-        return "";
-
-      default:
-        return "";
-    }
-  };
-
   const handleChange = (field: keyof TicketDTO, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    const error = validateField(field, value);
+    const error = validateTicketField(field, value);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
@@ -126,7 +92,7 @@ export const CreateTicketPage = () => {
 
     const newErrors: Record<string, string> = {};
     formKeys.forEach((key) => {
-      const error = validateField(key, formData[key]);
+      const error = validateTicketField(key, formData[key]);
       if (error) newErrors[key] = error;
     });
 
@@ -181,7 +147,7 @@ export const CreateTicketPage = () => {
                   id="name"
                   type="text"
                   maxLength={255}
-                  className={`glass-select ${errors.name ? "input-error" : ""}`}
+                  className={`glass-input ${errors.name ? "input-error" : ""}`}
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Enter ticket name"
@@ -197,7 +163,7 @@ export const CreateTicketPage = () => {
                   id="price"
                   type="number"
                   step="1"
-                  className={`glass-select ${errors.price ? "input-error" : ""}`}
+                  className={`glass-input ${errors.price ? "input-error" : ""}`}
                   value={formData.price}
                   onChange={(e) => handleChange("price", e.target.value)}
                   placeholder="Enter ticket price"
@@ -212,8 +178,7 @@ export const CreateTicketPage = () => {
                 <input
                   id="number"
                   type="number"
-                  step="0.01"
-                  className={`glass-select ${
+                  className={`glass-input ${
                     errors.number ? "input-error" : ""
                   }`}
                   value={formData.number}
@@ -230,9 +195,9 @@ export const CreateTicketPage = () => {
                 <input
                   id="discount"
                   type="number"
-                  step="0.1"
+                  min="0"
                   max="100"
-                  className={`glass-select ${
+                  className={`glass-input ${
                     errors.discount ? "input-error" : ""
                   }`}
                   value={formData.discount}
@@ -262,11 +227,11 @@ export const CreateTicketPage = () => {
                 <select
                   id="type"
                   className="glass-select"
-                  value={formData.type}
-                  onChange={(e) => handleChange("type", e.target.value)}
+                  value={formData.type ? formData.type : "-"}
+                  onChange={(e) => handleChange("type", e.target.value === "-" ? "" : e.target.value)}
                 >
                   {Object.entries(TICKET_TYPES).map(([key, value]) => (
-                    <option key={key} value={value}>{key}</option>
+                    <option key={key} value={value ? value : "-"}>{key !== "NOT_STATED" ? key : "-"}</option>
                   ))}
                 </select>
               </div>
@@ -352,7 +317,7 @@ export const CreateTicketPage = () => {
               </div>
 
               <div className="object-field">
-                <label>Choose venue *</label>
+                <label>Venue *</label>
                 <div className="object-field-controls">
                   <select
                     className={`glass-select ${

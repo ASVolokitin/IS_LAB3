@@ -6,6 +6,7 @@ import "../../CreateSubobjectPage/CreateSubobjectPage.css"
 import "../../../../elements/Input/Input.css";
 import { CoordinatesDTO } from "../../../../../interfaces/dto/CoordinatesDTO";
 import { createCoordinates } from "../../../../../services/api";
+import { validateCoordinatesField } from "../../../../../services/validator/coordinatesValidator";
 
 export const CreateCoordinatesPage = () => {
   const navigate = useNavigate();
@@ -21,32 +22,11 @@ export const CreateCoordinatesPage = () => {
     y: "",
   });
 
-  const validateField = (name: keyof CoordinatesDTO, value: string): string => {
-    const numValue = Number(value);
-
-    switch (name) {
-      case "x":
-        if (value === "" || isNaN(numValue))
-          return "X coordinate should not be null";
-        if (numValue <= -201) return "X coordinate should be greater than -201";
-        if (!Number.isInteger(numValue)) return "X coordinate be integer";
-        return "";
-
-      case "y":
-        if (value === "" || isNaN(numValue))
-          return "Y coordinate should not be null";
-        if (numValue <= -5) return "Y coordinate should be greater than -5";
-        return "";
-
-      default:
-        return "";
-    }
-  };
 
   const handleChange = (field: keyof CoordinatesDTO, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    const error = validateField(field, value);
+    const error = validateCoordinatesField(field, value);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
@@ -60,8 +40,8 @@ export const CreateCoordinatesPage = () => {
 
     let hasErrors = false;
 
-    const xError = validateField("x", String(formData.x));
-    const yError = validateField("y", String(formData.y));
+    const xError = validateCoordinatesField("x", String(formData.x));
+    const yError = validateCoordinatesField("y", String(formData.y));
 
     if (xError) {
       newErrors.x = xError;
@@ -131,7 +111,6 @@ export const CreateCoordinatesPage = () => {
                 <input
                   id="y"
                   type="number"
-                  step="0.1"
                   className={`glass-input ${errors.y ? "input-error" : ""}`}
                   value={formData.y}
                   onChange={(e) => handleChange("y", e.target.value)}

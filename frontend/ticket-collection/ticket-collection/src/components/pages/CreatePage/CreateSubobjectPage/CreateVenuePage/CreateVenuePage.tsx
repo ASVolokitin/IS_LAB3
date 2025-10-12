@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { VENUE_TYPES, VenueType } from "../../../../../types/VenueType";
-import { createEvent, createVenue } from "../../../../../services/api";
-import { VenueFormData } from "../../../../../formData/VenueFormData";
+import { VENUE_TYPES } from "../../../../../types/VenueType";
+import { createVenue } from "../../../../../services/api";
+import { VenueFormData } from "../../../../../interfaces/formData/VenueFormData";
+import { validateVenueField } from "../../../../../services/validator/venueValidator";
+import NavBar from "../../../../elements/NavBar/NavBar";
 
 export const CreateVenuePage = () => {
   const navigate = useNavigate();
@@ -15,30 +17,11 @@ export const CreateVenuePage = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const validateField = (name: keyof VenueFormData, value: any): string => {
-    switch (name) {
-      case "name":
-        if (!value || value.trim() === "") return "Name should not be blank";
-        return "";
-
-      case "capacity":
-        if (!value) return "Capacity should be specified";
-        if (isNaN(Number(value))) return "Capacity should be a number";
-        if (Number(value) <= 0) return "Capacity should be greater than 0";
-        if (!Number.isInteger(Number(value)))
-          return "Capacity should be integer";
-        if (value > 1e7) return "Capacity value is too big";
-        return "";
-
-      default:
-        return "";
-    }
-  };
 
   const handleChange = (field: keyof VenueFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
-    const error = validateField(field, value);
+    const error = validateVenueField(field, value);
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
@@ -48,7 +31,7 @@ export const CreateVenuePage = () => {
     const newErrors: Record<string, string> = {};
 
     Object.keys(formData).forEach((key) => {
-      const error = validateField(
+      const error = validateVenueField(
         key as keyof VenueFormData,
         formData[key as keyof VenueFormData]
       );
@@ -96,6 +79,8 @@ export const CreateVenuePage = () => {
   };
 
   return (
+    <>
+    <NavBar />
     <div className="form-page">
       <div className="full-form-container">
         <h1>Create venue</h1>
@@ -179,5 +164,6 @@ export const CreateVenuePage = () => {
         </form>
       </div>
     </div>
+    </>
   );
 };
