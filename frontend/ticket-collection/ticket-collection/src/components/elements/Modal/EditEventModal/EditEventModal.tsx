@@ -1,19 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import "../Dialog.css";
 import { useEventForm } from "../../../../hooks/useEventForm";
 import { EventModalProps } from "../../../../interfaces/editModalProps/EventModalProps";
 import { useModalCloseEffect } from "../../../../hooks/useModalCloseEffect";
-import { EventForm } from "../../Form/EventForm";
-import { convertEventResponseToFormData } from "../../../converters/ResponseToFormDataConverter";
 
 export const EditEventModal = (
-  { isOpen,
-    onClose,
-    eventData,
-    onSave }: EventModalProps
+  {isOpen,
+  onClose,
+  eventData,
+  onSave}: EventModalProps
 ) => {
-
-
   const {
     formData,
     errors,
@@ -21,9 +17,7 @@ export const EditEventModal = (
     validateForm,
     getSubmitData,
     isFormValid,
-  } = useEventForm(eventData ? convertEventResponseToFormData(eventData) : undefined);
-
-  
+  } = useEventForm(eventData);
 
   useModalCloseEffect(isOpen, onClose);
 
@@ -63,8 +57,7 @@ export const EditEventModal = (
         </div>
 
         <form onSubmit={handleSubmit} className="ticket-form">
-          <EventForm initialFormData={formData} onChange={handleChange} />
-          {/* <div className="form-section">
+          <div className="form-section">
             <div className="form-group">
               <label htmlFor="edit-event-name">Event name *</label>
               <input
@@ -122,7 +115,7 @@ export const EditEventModal = (
                 <span className="error-message">{errors.date}</span>
               )}
             </div>
-          </div> */}
+          </div>
 
           <div className="form-actions">
             <button type="button" className="outline-button" onClick={onClose}>

@@ -97,14 +97,14 @@ export const EntitiesDashboard = () => {
       }
 
       const mappedEntities = mapEntitiesByType(response?.data, type);
-      // setEntities(mappedEntities);
-      // console.log("mapped entities", mappedEntities);
+      setEntities(mappedEntities);
+      console.log("mapped entities", mappedEntities);
     } catch (error: any) {
       console.error("Error loading entities:", error);
       setError(error.response?.data?.message || "Error");
       console.log("ERROR", error);
       setTimeout(() => setError(null), 5000);
-      // setEntities([]);
+      setEntities([]);
     } 
   };
 

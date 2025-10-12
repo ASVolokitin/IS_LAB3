@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { EventFormData } from "../interfaces/formData/EventFormData";
 import { TicketEvent } from "../interfaces/TicketEvent";
 import { validateEventField } from "../services/validator/eventValidator";
+import { EventFormData } from "../interfaces/formData/EventFormData";
 
-export const useEventForm = (initialFormData?: EventFormData) => {
+export const useEventForm = (initialData?: TicketEvent) => {
   const [formData, setFormData] = useState<EventFormData>({
     name: "",
     description: "",
@@ -17,7 +17,7 @@ export const useEventForm = (initialFormData?: EventFormData) => {
     minAge: "",
     date: "",
   });
-  const rawDate = initialFormData?.date;
+  const rawDate = initialData?.date;
 
   if (rawDate && rawDate !== "Not stated") {
     const date = new Date(rawDate);
@@ -27,16 +27,16 @@ export const useEventForm = (initialFormData?: EventFormData) => {
     const hours = String(date.getHours()).padStart(2, "0");
     const minutes = String(date.getMinutes()).padStart(2, "0");
 
-    initialFormData.date = `${year}-${month}-${day}T${hours}:${minutes}`;
+    initialData.date = `${year}-${month}-${day}T${hours}:${minutes}`;
   }
 
   useEffect(() => {
-    if (initialFormData) {
+    if (initialData) {
       setFormData({
-        name: String(initialFormData.name || ""),
-        description: String(initialFormData.description || ""),
-        minAge: String(initialFormData.minAge),
-        date: initialFormData.date || "",
+        name: String(initialData.name || ""),
+        description: String(initialData.description || ""),
+        minAge: String(initialData.minAge),
+        date: initialData.date || "",
       });
     } else {
       setFormData({
@@ -46,7 +46,7 @@ export const useEventForm = (initialFormData?: EventFormData) => {
         date: "",
       });
     }
-  }, []);
+  }, [initialData]);
 
   const handleChange = (field: keyof EventFormData, value: any) => {
     const safeValue = value === undefined ? "" : value;
