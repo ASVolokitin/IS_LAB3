@@ -69,7 +69,6 @@ export const EntitiesDashboard = () => {
     try {
       let response;
       
-
       switch (type) {
         case "tickets":
           

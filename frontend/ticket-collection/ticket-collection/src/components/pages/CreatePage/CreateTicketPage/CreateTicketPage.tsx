@@ -104,7 +104,7 @@ export const CreateTicketPage = () => {
     console.log("Submit data:", formData);
     
     createTicket(formData)
-      .then(() => setServerStatus(`Successfully created ticket ${formData.name}`))
+      .then((res) => setServerStatus(`Successfully created ticket ${formData.name} with id ${res.data.entityId}`))
       .catch((err) => {
         if (err.response) setServerStatus(`ERROR: ${err.response.data.message}` || "Server error");
         else if (err.request) setServerStatus("No response from server");

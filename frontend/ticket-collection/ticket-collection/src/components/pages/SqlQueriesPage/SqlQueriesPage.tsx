@@ -12,11 +12,13 @@ import { NavBar } from "../../elements/NavBar/NavBar";
 import { Link } from "react-router-dom";
 
 import '../../elements/Input/Input.css'
+import { SqlFormData } from "../../../interfaces/formData/SqlFormData";
+import { validateSqlField } from "../../../services/validator/sqlValidator";
 
 export const SqlQueriesPage = () => {
 
-  const [countByNumberEqualsField, setCountByNumberEqualsField] =
-    useState<number>(0);
+  const [countByNumberEqualsField, setCountByNumberEqualField] =
+    useState<string>("");
   const [countByNumberEqualsResult, setCountByNumberEqualsResult] =
     useState<number>(0);
 
@@ -30,6 +32,12 @@ export const SqlQueriesPage = () => {
   const [cancelBookingPersonIdResult, setCancelBookingPersonIdResult] =
     useState<String>("");
 
+  const [errors, setErrors] = useState<Record<keyof SqlFormData, string>>({
+      equalInNumber: "",
+      lessInNumber: "",
+      cancelBookingsId: ""
+    });
+
   useEffect(() => {
     getTicketsGroupedByCoordinates()
       .then((res) => console.log(res.data))
@@ -37,7 +45,7 @@ export const SqlQueriesPage = () => {
   }, []);
 
   useEffect(() => {
-    getTicketsAmountByNumberEquals(countByNumberEqualsField)
+    getTicketsAmountByNumberEquals(Number(countByNumberEqualsField))
       .then((res) => setCountByNumberEqualsResult(res.data))
       .catch((err) => console.error(err));
   }, [countByNumberEqualsField]);
@@ -61,6 +69,23 @@ export const SqlQueriesPage = () => {
       )
       .catch((err) => console.error(err));
   };
+
+  const handleChangeEqualInNumber = (value: string) => {
+    // value = value.replace(/[^\d.-]/g, '') // Удаляем все кроме цифр, точки и минуса
+    //   .replace(/(?!^)-/g, '') // Удаляем минусы не в начале
+    //   .replace(/(\..*)\./g, '$1'); // Оставляем только первую точку
+    setCountByNumberEqualField(value)
+
+    setErrors((prev) => ({ ...prev, ["equalInNumber"]: validateSqlField("equalInNumber", value)}));
+
+  }
+
+  const handleChangeLessInNumber = (value: string) => {
+    setCountByNumberLessField(Number(value))
+
+    setErrors((prev) => ({ ...prev, ["lessInNumber"]: validateSqlField("lessInNumber", value)}));
+
+  }
 
   return (
     <>
@@ -87,13 +112,20 @@ export const SqlQueriesPage = () => {
                 <div className="input-value-row">
             <input
               className="glass-input"
-              type="number"
+              type="text"
+              pattern="-?\d*\.?\d*"
+              min={1}
+              value={countByNumberEqualsField}
               onChange={(e) =>
-                setCountByNumberEqualsField(Number(e.target.value))
+                handleChangeEqualInNumber(e.target.value)
               }
             ></input>
+            
             <h2>{countByNumberEqualsResult}</h2>
           </div>
+          {errors.equalInNumber && (
+                  <span className="error-message">{errors.equalInNumber}</span>
+                )}
           </div>
           
         </SpotlightCard>
@@ -109,12 +141,18 @@ export const SqlQueriesPage = () => {
             <input
               className="glass-input"
               type="number"
+              min={1}
               onChange={(e) =>
-                setCountByNumberLessField(Number(e.target.value))
+                handleChangeLessInNumber(e.target.value)
               }
+              onBlur={(e) =>
+                handleChangeLessInNumber(e.target.value)}
             ></input>
             <h2>{countByNumberLessResult}</h2>
           </div>
+          {errors.lessInNumber && (
+                  <span className="error-message">{errors.lessInNumber}</span>
+                )}
           </div>
           
         </SpotlightCard>
@@ -145,7 +183,7 @@ export const SqlQueriesPage = () => {
                 setCancelBookingPersonIdField(Number(e.target.value))
               }
             ></input>
-            <input type="button" value="Send" className="glass-button" onClick={() => cancelBookings()}></input>
+            <input type="button" value="Cancel" className="glass-button" onClick={() => cancelBookings()}></input>
           </div>
           <p>{cancelBookingPersonIdResult}</p>
           </div>

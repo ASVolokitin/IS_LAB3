@@ -100,7 +100,7 @@ export const CreateCoordinatesPage = () => {
                   className={`glass-input ${errors.x ? "input-error" : ""}`}
                   value={formData.x}
                   onChange={(e) => handleChange("x", e.target.value)}
-                  placeholder="Integer, greater than 201"
+                  placeholder="Integer, greater than -201"
                   min="-200"
                 />
                 {errors.x && <span className="error-message">{errors.x}</span>}

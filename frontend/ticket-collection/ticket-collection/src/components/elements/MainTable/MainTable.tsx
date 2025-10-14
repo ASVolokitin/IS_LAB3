@@ -6,10 +6,14 @@ import { getNestedValue, renderCell } from "../../../services/mainPageUtils";
 
 import "./../Button/Button.css";
 import { Filter } from "../../../interfaces/FilterInterface";
+import { SortOrder } from "../../../types/SortOrder";
 
 interface MainTableProps {
   tickets: Ticket[];
   filters: Filter;
+  initialSortField: string;
+  initialSortOrder: SortOrder
+  onSortChange: (sortField: string, sortOrder: SortOrder) => void;
   onTicketDelete: (ticketId: number) => void;
   onTicketDoubleClick: (ticket: Ticket) => void;
 }
@@ -17,54 +21,45 @@ interface MainTableProps {
 const MainTable = ({
   tickets,
   filters,
+  onSortChange,
+  initialSortField,
+  initialSortOrder,
   onTicketDelete,
   onTicketDoubleClick,
 }: MainTableProps) => {
-  type SortOrder = "asc" | "desc" | null;
+  
 
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder>(null);
+  const [sortField, setSortField] = useState<string | null>(initialSortField);
+  const [sortOrder, setSortOrder] = useState<SortOrder>(initialSortOrder);
 
-  const handleSort = (field: string) => {
-    if (sortField !== field) {
-      setSortField(field);
-      setSortOrder("asc");
-    } else {
-      setSortOrder((prev) =>
-        prev === "asc" ? "desc" : prev === "desc" ? null : "asc"
-      );
-      if (sortOrder === "desc") setSortField(null);
-    }
-  };
+  // const handleSortOrder = (field: string) => {
+  //   if (sortField !== field) {
+  //     setSortField(field);
+  //     setSortOrder("asc");
+  //   } else {
+  //     setSortOrder((prev) =>
+  //       prev === "asc" ? "desc" : prev === "desc" ? null : "asc"
+  //     );
+  //     if (sortOrder === "desc") setSortField(null);
+  //   }
+  // };
 
-  const sortedData = React.useMemo(() => {
-    if (!sortField || !sortOrder) return tickets;
+  const handleSortOrder = (field: string) => {
+  let newSortField: string | null = field;
+  let newSortOrder: SortOrder;
 
-    return [...tickets].sort((a, b) => {
-      const aValue = getNestedValue(a, sortField);
-      const bValue = getNestedValue(b, sortField);
+  if (sortField !== field) {
+    newSortOrder = "asc";
+  } else {
+    newSortOrder = sortOrder === "asc" ? "desc" : sortOrder === "desc" ? null : "asc";
+    if (sortOrder === "desc") newSortField = null;
+  }
 
-      if (aValue === bValue) return 0;
-      if (aValue == null) return 1;
-      if (bValue == null) return -1;
+  setSortField(newSortField);
+  setSortOrder(newSortOrder);
 
-      const aDate = new Date(aValue);
-      const bDate = new Date(bValue);
-      if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
-        return sortOrder === "asc"
-          ? aDate.getTime() - bDate.getTime()
-          : bDate.getTime() - aDate.getTime();
-      }
-
-      if (typeof aValue === "number" && typeof bValue === "number") {
-        return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return sortOrder === "asc"
-        ? String(aValue).localeCompare(String(bValue))
-        : String(bValue).localeCompare(String(aValue));
-    });
-  }, [tickets, sortField, sortOrder]);
+  onSortChange(newSortField ?? "", newSortOrder);
+};
 
   return (
     <>
@@ -74,7 +69,7 @@ const MainTable = ({
             {columns.map((col) => (
               <th
                 key={col.field}
-                onClick={() => handleSort(col.field)}
+                onClick={() => {handleSortOrder(col.field)}}
                 style={{ cursor: "pointer" }}
               >
                 {col.label}
@@ -89,9 +84,9 @@ const MainTable = ({
             ))}
           </tr>
         </thead>
-        {sortedData && (
+        {tickets && (
           <tbody>
-            {sortedData.map((row) => (
+            {tickets.map((row) => (
               <tr onDoubleClick={() => onTicketDoubleClick(row)} key={row.id}>
                 {columns.map((col) => (
                   <td key={col.field}>{renderCell(row, col.field)}</td>
@@ -111,7 +106,7 @@ const MainTable = ({
           </tbody>
         )}
       </table>
-      {sortedData.length === 0 && (
+      {tickets.length === 0 && (
           <div style={{textAlign: "center", alignItems: "center", width: "100%"}}>
             <p>No tickets</p>
           </div>

@@ -34,8 +34,8 @@ export const useTicketForm = (initialData?: TicketFormData) => {
       setFormData({
         name: String(initialData.name || ""),
         coordinatesId: initialData.coordinatesId || "",
-        personId: initialData.personId || null,
-        eventId: initialData.eventId || null,
+        personId: initialData.personId === "Not stated" ? null : initialData.personId,
+        eventId: initialData.eventId === "Not stated" ? null : initialData.eventId,
         price: String(initialData.price || ""),
         type: initialData.type === "Not stated" ? null : initialData.type,
         discount: String(initialData.discount),

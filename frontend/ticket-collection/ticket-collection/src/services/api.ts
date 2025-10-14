@@ -16,7 +16,9 @@ const api = axios.create({
     },
 });
 
-export const getTicketsPage = (page: number, size: number) => api.get(`/tickets?page=${page}&size=${size}&sort=id,asc`);
+// export const getTicketsPage = (page: number, size: number, sortColumn: string, sortDirection: string) => api.get(`/tickets?page=${page}&size=${size}&{sort=${sortColumn},${sortDirection}}`);
+export const getTicketsPage = (page: number, size: number, sortColumn?: string, sortDirection?: string | null) => api.get(`/tickets?page=${page}&size=${size}${sortDirection ? `&sort=${sortColumn},${sortDirection}` : ""}`);
+
 
 export const getAllTickets = () => api.get("/tickets/all");
 

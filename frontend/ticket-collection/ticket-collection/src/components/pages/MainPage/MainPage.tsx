@@ -15,18 +15,23 @@ import { Notification } from "../../elements/Notification/Notification";
 import { EditTicketModal } from "../../elements/Modal/EditTicketModal/EditTicketModal";
 import { TicketFormData } from "../../../interfaces/formData/TicketFormData";
 import { PageNav } from "../../elements/PageNav/PageNav";
-import { useAllTickets } from "../../../hooks/useAllTickets";
 import { queryClient } from "../../../config/react-query";
-import { useTicketsPage } from "../../../hooks/useTicketsPage";
-import { filterTickets } from "../../../services/ticketsFilter";
+import { useEntities } from "../../../hooks/useEntities";
+import { SortOrder } from "../../../types/SortOrder";
+import { devLog } from "../../../services/logger";
+import { QuerySort } from "../../../interfaces/QuerySort";
 
 const MainPage = () => {
   const [activeTicketId, setActiveTicketId] = useState<number>(0);
   const [dataPage, setDataPage] = useState<number>(0);
   const [maxPageValue, setMaxPageValue] = useState<number>(0);
-  const [dataSize] = useState<number>(5);
+  const [dataSize] = useState<number>(2);
   const [status, setStatus] = useState<string | null>(null);
-  const [serverError, setServerError] = useState<string | null>("");
+  const [sort, setSort] = useState<QuerySort>({
+    sortField: "id",
+    sortOrder: "asc"
+  })
+
 
   const [filters, setFilters] = useState<Filter>({
     ticketNameFilter: "",
@@ -56,27 +61,17 @@ const MainPage = () => {
     });
   };
 
-  const {
-    data: allTickets,
-    isError: isAllTicketsFetchError,
-    error: allTicketsFetchError,
-  } = useAllTickets(dataPage, dataSize);
+ 
 
-  const {
-    data: allTicketsPage,
-    isError: isAllTicketsPageFetchError,
-    error: allTicketsPageFetchError,
-  } = useTicketsPage(dataPage, dataSize);
+  const handleSortChange = (sortField: string, sortOrder: SortOrder) => {
+    setSort({ sortField, sortOrder });
+    devLog.log("Changed sorting: ", sortField, sortOrder);
 
-  const computedFilteredTickets = useMemo(
-    () => filterTickets(allTickets || [], filters),
-    [allTickets, filters]
-  );
+  }
 
-  const computedFilteredTicketsPage = useMemo(
-    () => filterTickets(allTicketsPage?.content || [], filters),
-    [allTicketsPage, filters]
-  );
+  const page = useMemo(() => ({ page: dataPage, size: dataSize }), [dataPage, dataSize]);
+
+  const { entities: tickets, serverError, setServerError, entitiesAmount } = useEntities<Ticket>("tickets", dataPage, dataSize, sort.sortField, sort.sortOrder);
 
   const updateFilter = (fieldName: string, value: string) => {
     setFilters((prev) => ({
@@ -88,30 +83,25 @@ const MainPage = () => {
   useEffect(() => {
     setMaxPageValue(
       Math.floor(
-        computedFilteredTickets
-          ? computedFilteredTickets.length / dataSize -
-              Number(!Boolean(computedFilteredTickets.length % dataSize))
+        tickets
+          ? entitiesAmount / dataSize -
+          Number(!Boolean(entitiesAmount % dataSize))
           : 0
       )
     );
-  }, [allTickets, dataSize, computedFilteredTickets]);
+  }, [tickets, dataSize]);
   const handleDeleteTicket = async (ticketId: number) => {
     try {
       await deleteTicket(ticketId);
-      await queryClient.invalidateQueries({ queryKey: ["ALL_TICKETS"] });
-      await queryClient.invalidateQueries({ queryKey: ["TICKETS_PAGE"] });
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      const serverErrorMessage = err.response?.data?.message || "Delete error";
+      setServerError(serverErrorMessage);
     }
   };
 
   const handleUpdateTicket = async (ticketData: any) => {
     try {
       await updateTicket(activeModal.data.id, ticketData);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["ALL_TICKETS"] }),
-        queryClient.invalidateQueries({ queryKey: ["TICKETS_PAGE"] }),
-      ]);
     } catch (err: any) {
       const serverErrorMessage = err.response?.data?.message || "Update error";
       setServerError(serverErrorMessage);
@@ -138,20 +128,24 @@ const MainPage = () => {
     };
   };
 
+
   return (
     <>
       <NavBar />
       <FilterControls filters={filters} onFilterChange={updateFilter} />
       <MainTable
-        tickets={computedFilteredTicketsPage}
+        tickets={tickets}
         filters={filters}
+        initialSortField={sort.sortField}
+        initialSortOrder={sort.sortOrder}
+        onSortChange={handleSortChange}
         onTicketDelete={handleDeleteTicket}
         onTicketDoubleClick={handleTicketDoubleClick}
       />
       <PageNav
-        page={dataPage}
-        size={dataSize}
-        ticketsAmount={computedFilteredTickets.length}
+        page={page.page}
+        size={page.size}
+        ticketsAmount={entitiesAmount}
         onPageChange={handlePageChange}
       />
       {activeModal.type === "editTickets" && (
@@ -161,23 +155,6 @@ const MainPage = () => {
           ticketId={activeTicketId}
           ticketData={transformTicketToFormData(activeModal.data)}
           onSave={handleUpdateTicket}
-        />
-      )}
-      {isAllTicketsFetchError && (
-        <Notification
-          message={allTicketsFetchError.message}
-          type="error"
-          isVisible={true}
-          onClose={() => console.log(allTicketsFetchError)}
-        />
-      )}
-
-      {isAllTicketsPageFetchError && (
-        <Notification
-          message={allTicketsPageFetchError.message}
-          type="error"
-          isVisible={true}
-          onClose={() => console.log(allTicketsPageFetchError)}
         />
       )}
       {serverError && (

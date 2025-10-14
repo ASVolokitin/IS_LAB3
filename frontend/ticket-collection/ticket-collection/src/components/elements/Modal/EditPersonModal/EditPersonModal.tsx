@@ -50,7 +50,6 @@ export const EditPersonModal = ({
     if (!validateForm()) return;
 
     try {
-      console.log("Submit data:", getSubmitData());
       await onSave(getSubmitData());
       onClose();
     } catch (error) {

@@ -2,10 +2,9 @@ import { CoordinatesFormData } from "../../interfaces/formData/CoordinatesFormDa
 
 export const validateCoordinatesField = (name: keyof CoordinatesFormData, value: string): string => {
     const numValue = Number(value);
-    console.log(name, "numvalue", numValue);
 
     switch (name) {
-      case "x":
+      case "x": 
         if (value === "" || isNaN(numValue))
           return "X coordinate should not be null";
         if (numValue <= -201) return "X coordinate should be greater than -201";
