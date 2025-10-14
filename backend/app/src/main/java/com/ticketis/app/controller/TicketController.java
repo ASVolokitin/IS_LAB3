@@ -1,0 +1,120 @@
+package com.ticketis.app.controller;
+
+import static com.ticketis.app.util.ResponseBuilder.successfulCreationById;
+import static com.ticketis.app.util.ResponseBuilder.successfulDeletionById;
+import static com.ticketis.app.util.ResponseBuilder.successfulSellById;
+import static com.ticketis.app.util.ResponseBuilder.successfulUpdateById;
+
+import com.ticketis.app.dto.request.SellTicketRequest;
+import com.ticketis.app.dto.request.TicketRequest;
+import com.ticketis.app.dto.sql.CoordinatesTicketCount;
+import com.ticketis.app.service.TicketService;
+import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/tickets")
+public class TicketController {
+
+    private final TicketService ticketService;
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllTickets() {
+        return new ResponseEntity<>(ticketService.getAllTickets(), HttpStatus.OK);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getTicketsPage(
+            // @RequestParam(required = false) String ticketName,
+            // @RequestParam(required = false) String personPassportID,
+            // @RequestParam(required = false) String eventDescription,
+            // @RequestParam(required = false) String venueName,
+            // @RequestParam(required = false) String locationName,
+            Pageable pageable) {
+
+        // Map<String, String> filters = Stream.of(
+        //         Map.entry("name", ticketName),
+        //         Map.entry("person.passportID", personPassportID),
+        //         Map.entry("event.description", eventDescription),
+        //         Map.entry("venue.name", venueName),
+        //         Map.entry("location.name", locationName)
+        // )
+        //         .filter(entry -> entry.getValue() != null && !entry.getValue().isBlank())
+        //         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        return new ResponseEntity<>(ticketService.getTicketsPage(pageable), HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getTicketsById(@PathVariable Long id) {
+        return new ResponseEntity<>(ticketService.getTicketById(id), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTicketsById(@PathVariable Long id) {
+        ticketService.deleteTicketById(id);
+        return new ResponseEntity<>(successfulDeletionById("ticket", id), HttpStatus.OK);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createTicket(@Valid @RequestBody TicketRequest request) {
+        Long id = ticketService.createTicket(request);
+        return new ResponseEntity<>(successfulCreationById("ticket", id), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateTickets(
+            @PathVariable Long id, @Valid @RequestBody TicketRequest request) {
+        ticketService.updateTicket(id, request);
+        return new ResponseEntity<>(successfulUpdateById("ticket", id), HttpStatus.OK);
+    }
+
+    @GetMapping("/count_grouped_by_coordinates")
+    public ResponseEntity<?> countGroupedByCoordinates() {
+        List<CoordinatesTicketCount> response = ticketService.countTicketsGroupedByCoordinates();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/count_by_number_equals/{number}")
+    public ResponseEntity<?> countByNumber(@PathVariable double number) {
+        Long response = ticketService.countTicketsByNumberEquals(number);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/count_by_number_less/{number}")
+    public ResponseEntity<?> countByNumberLess(@PathVariable double number) {
+        Long response = ticketService.countTicketsByNumberLess(number);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/sell")
+    public ResponseEntity<?> sellTicket(@Valid @RequestBody SellTicketRequest request) {
+        ticketService.sellTicketByPrice(request);
+        return new ResponseEntity<>(
+                successfulSellById("ticket", request.ticketId(), request.buyerId()), HttpStatus.OK);
+    }
+
+    @PostMapping("/unbook")
+    public ResponseEntity<?> unbookTickets(@RequestParam Long personId) {
+        int modifiedRowsAmount = ticketService.unbookByPersonId(personId);
+        return new ResponseEntity<>(modifiedRowsAmount, HttpStatus.OK);
+    }
+}
