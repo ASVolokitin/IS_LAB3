@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Profiler, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../../../elements/NavBar/NavBar";
 
@@ -8,6 +8,7 @@ import { createEvent } from "../../../../../services/api";
 import { EventForm } from "../../../../elements/Form/EventForm";
 import { TicketEventDTO } from "../../../../../interfaces/dto/TicketEventDTO";
 import { Notification } from "../../../../elements/Notification/Notification";
+import { onRenderCallback } from "../../../../../services/profiler";
 
 export const CreateEventPage = () => {
 
@@ -37,7 +38,9 @@ export const CreateEventPage = () => {
       <div className="create-object-page">
         <div className="form-container">
           <h1>Create new event</h1>
-          <EventForm onSubmit={handleSubmit} onCancel={() => navigate(-1)} />
+          <Profiler id="LocationFormProfiler" onRender={onRenderCallback}>
+            <EventForm onSubmit={handleSubmit} onCancel={() => navigate(-1)} />
+          </Profiler>
         </div>
         {serverError && (
           <Notification

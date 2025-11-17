@@ -3,7 +3,7 @@ import "../../../sharedStyles/Table.css";
 import MainTable from "../../elements/MainTable/MainTable";
 import { NavBar } from "../../elements/NavBar/NavBar";
 import { ModalType } from "../../../types/ModalType";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   deleteTicket,
   updateTicket,
@@ -20,6 +20,11 @@ import { QuerySort } from "../../../interfaces/QuerySort";
 import { convertTicketEntityToDto } from "../../converters/EntityToDtoConverter";
 
 const MainPage = () => {
+
+  const marker = "custom: render-main-page";
+  const end_marker = "custom: end-render-main-page";
+  performance.mark(marker);
+
   const [activeTicketId, setActiveTicketId] = useState<number>(0);
   const [dataPage, setDataPage] = useState<number>(0);
   const [maxPageValue, setMaxPageValue] = useState<number>(0);
@@ -108,6 +113,9 @@ const MainPage = () => {
     const minPageValue = 0;
     setDataPage(Math.max(Math.min(page, maxPageValue), minPageValue));
   };
+
+  performance.mark(end_marker);
+  performance.measure('custom: main page measure', marker, end_marker);
 
   return (
     <>

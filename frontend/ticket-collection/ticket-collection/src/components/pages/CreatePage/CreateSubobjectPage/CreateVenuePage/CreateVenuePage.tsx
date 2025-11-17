@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Profiler, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { VENUE_TYPES } from "../../../../../types/VenueType";
 import { createVenue } from "../../../../../services/api";
@@ -9,6 +9,8 @@ import { VenueForm } from "../../../../elements/Form/VenueForm";
 import { TicketEventDTO } from "../../../../../interfaces/dto/TicketEventDTO";
 import { VenueDTO } from "../../../../../interfaces/dto/VenueDTO";
 import { Notification } from "../../../../elements/Notification/Notification";
+import { devLog } from "../../../../../services/logger";
+import { onRenderCallback } from "../../../../../services/profiler";
 
 export const CreateVenuePage = () => {
 
@@ -35,7 +37,10 @@ export const CreateVenuePage = () => {
       <div className="create-object-page">
         <div className="form-container">
           <h1>Create new venue</h1>
-          <VenueForm onSubmit={handleSubmit} onCancel={() => navigate(-1)} />
+          <Profiler id="VenueFormProfiler" onRender={onRenderCallback}>
+            <VenueForm onSubmit={handleSubmit} onCancel={() => navigate(-1)} />
+          </Profiler>
+
           <p>{serverStatus}</p>
         </div>
         {serverError && (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Profiler, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../../../elements/NavBar/NavBar";
 
@@ -11,6 +11,7 @@ import { createPerson, getLocations } from "../../../../../services/api";
 import { PersonForm } from "../../../../elements/Form/PersonForm";
 import { devLog } from "../../../../../services/logger";
 import { Notification } from "../../../../elements/Notification/Notification";
+import { onRenderCallback } from "../../../../../services/profiler";
 
 export const CreatePersonPage = () => {
 
@@ -27,8 +28,8 @@ export const CreatePersonPage = () => {
 
   const loadExistingObjects = async () => {
     getLocations()
-      .then((res) => {setLocations(res.data); setIsLoading(false);})
-      .catch((err) => {setServerError(err.response.data.message); setIsLoading(false);});
+      .then((res) => { setLocations(res.data); setIsLoading(false); })
+      .catch((err) => { setServerError(err.response.data.message); setIsLoading(false); });
   };
 
   const handleSubmit = (dto: PersonDTO) => {
@@ -50,13 +51,15 @@ export const CreatePersonPage = () => {
         <div className="form-container">
           <h1>Create new person</h1>
           {isLoading ? (
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            Loading data...
-          </div>
-        ) : (
-          <PersonForm onSubmit={handleSubmit} locationList={locations} onCancel={() => navigate(-1)} />
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              Loading data...
+            </div>
+          ) : (
+            <Profiler id="CoordinatesFormProfiler" onRender={onRenderCallback}>
+              <PersonForm onSubmit={handleSubmit} locationList={locations} onCancel={() => navigate(-1)} />
+            </Profiler>
 
-        )}
+          )}
           <p>{serverStatus}</p>
         </div>
         {serverError && (
