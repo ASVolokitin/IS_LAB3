@@ -10,11 +10,9 @@ import com.ticketis.app.dto.request.TicketRequest;
 import com.ticketis.app.dto.sql.CoordinatesTicketCount;
 import com.ticketis.app.service.TicketService;
 import jakarta.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -31,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/tickets")
+@RequestMapping("/api/tickets")
 public class TicketController {
 
     private final TicketService ticketService;
@@ -43,24 +41,32 @@ public class TicketController {
 
     @GetMapping
     public ResponseEntity<?> getTicketsPage(
-            // @RequestParam(required = false) String ticketName,
-            // @RequestParam(required = false) String personPassportID,
-            // @RequestParam(required = false) String eventDescription,
-            // @RequestParam(required = false) String venueName,
-            // @RequestParam(required = false) String locationName,
+            @RequestParam(required = false) String ticketName,
+            @RequestParam(required = false) String personPassportID,
+            @RequestParam(required = false) String eventDescription,
+            @RequestParam(required = false) String venueName,
+            @RequestParam(required = false) String personLocationName,
             Pageable pageable) {
 
-        // Map<String, String> filters = Stream.of(
-        //         Map.entry("name", ticketName),
-        //         Map.entry("person.passportID", personPassportID),
-        //         Map.entry("event.description", eventDescription),
-        //         Map.entry("venue.name", venueName),
-        //         Map.entry("location.name", locationName)
-        // )
-        //         .filter(entry -> entry.getValue() != null && !entry.getValue().isBlank())
-        //         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        Map<String, String> filters = new LinkedHashMap<>();
 
-        return new ResponseEntity<>(ticketService.getTicketsPage(pageable), HttpStatus.OK);
+        if (ticketName != null && !ticketName.isBlank()) {
+            filters.put("name", ticketName);
+        }
+        if (personPassportID != null && !personPassportID.isBlank()) {
+            filters.put("person.passportID", personPassportID);
+        }
+        if (eventDescription != null && !eventDescription.isBlank()) {
+            filters.put("event.description", eventDescription);
+        }
+        if (venueName != null && !venueName.isBlank()) {
+            filters.put("venue.name", venueName);
+            
+        }
+        if (personLocationName != null && !personLocationName.isBlank()) {
+            filters.put("person.location.name", personLocationName);
+        }
+        return new ResponseEntity<>(ticketService.getTicketsPage(filters, pageable), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

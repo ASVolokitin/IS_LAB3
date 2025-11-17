@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/coordinates")
+@RequestMapping("/api/coordinates")
 public class CoordinatesController {
 
     private final CoordinatesService coordinatesService;

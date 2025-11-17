@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
-@RequestMapping("/venues")
+@RequestMapping("/api/venues")
 @RequiredArgsConstructor
 public class VenueController {
     
