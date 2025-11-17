@@ -14,11 +14,11 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        corsConfiguration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "http://localhost:3000", "http://localhost:8081"));
         corsConfiguration.setAllowedHeaders(Arrays.asList(
-            "Origin", "Content-Type", "Accept", "Authorization"));
+                "Origin", "Content-Type", "Accept", "Authorization"));
         corsConfiguration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfiguration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -26,5 +26,5 @@ public class CorsConfig {
 
         return new CorsFilter(source);
     }
-    
+
 }
