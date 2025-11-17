@@ -8,7 +8,6 @@ import jakarta.validation.constraints.Positive;
 
 public record  TicketRequest(
 
-    @NotNull
     @NotBlank
     String name,
 

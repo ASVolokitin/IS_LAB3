@@ -6,7 +6,6 @@ import java.util.Date;
 
 public record EventRequest(
 
-    @NotNull
     @NotBlank
     String name,
     

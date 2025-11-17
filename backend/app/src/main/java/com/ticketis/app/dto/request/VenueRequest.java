@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Positive;
 
 public record VenueRequest(
 
-        @NotNull
         @NotBlank
         String name,
 
