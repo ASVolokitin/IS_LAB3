@@ -17,6 +17,7 @@ import { SellTicketPage } from "./components/pages/SellTicketPage/SellTicketPage
 import MainPage from "./components/pages/MainPage/MainPage";
 import { webSocketService } from "./services/webSocketService";
 import ReactDOM from "react-dom/client";
+import { ImportHistoryPage } from "./components/pages/ImportHistoryPage/ImportHistoryPage";
 
 webSocketService.connect()
 
@@ -38,6 +39,7 @@ const router = createBrowserRouter([
   { path: "/locations/create", element: <CreateLocationPage /> },
   { path: "/venues/create", element: <CreateVenuePage /> },
   { path: "/connected_entities", element: <EntitiesDashboard /> },
+  { path: "/import_history", element: <ImportHistoryPage /> },
   { path: "*", element: <NotFoundPage /> },
 ]);
 

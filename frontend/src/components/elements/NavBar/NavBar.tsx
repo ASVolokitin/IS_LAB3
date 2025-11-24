@@ -11,7 +11,8 @@ export const NavBar = () => {
   { path: "/", label: "Main" },
   { path: "/sql", label: "SQL Queries" },
   { path: "/tickets/create", label: "Create new ticket" },
-  { path: "/connected_entities", label: "Dashboard" }
+  { path: "/connected_entities", label: "Dashboard" },
+  { path: "/import_history", label: "Import" }
 ], []);
 
   useEffect(() => {

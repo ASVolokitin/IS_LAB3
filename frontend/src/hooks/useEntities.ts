@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getAllTickets, getCoordinates, getEvents, getLocations, getPersons, getTicketsPage, getVenues } from "../services/api";
+import { getAllTickets, getCoordinates, getEvents, getImportsPage, getLocations, getPersons, getTicketsPage, getVenues } from "../services/api";
 import { EntityType } from "../types/ConnectedObject";
 import { webSocketService } from "../services/webSocketService";
 import { SortOrder } from "../types/SortOrder";
@@ -48,6 +48,13 @@ export function useEntities<T>(
             devLog.log(`[REFRESH] Fetched all tickets (${response.data.length}) in ${Date.now() - startTime}ms`);
             break;
           }
+        case "import_history":
+          const pageResponse = await getImportsPage(pageNumber ? pageNumber : 0, pageSize ? pageSize : 5);
+          setEntitiesAmount(pageResponse.data.totalElements);
+          response = { data: pageResponse.data.content };
+          devLog.log(`[REFRESH] Fetched ${pageResponse.data.content.length} tickets (page ${pageNumber}, size ${pageSize}) in ${Date.now() - startTime}ms`);
+          break;
+          
         case "coordinates":
           response = await getCoordinates();
           devLog.log(`[REFRESH] Fetched coordinates (${response.data.length}) in ${Date.now() - startTime}ms`);

@@ -11,7 +11,7 @@ function getNestedValue(obj: any, path: string) {
 }
 
 
-export function renderCell(row: Ticket, field: string) {
+export function renderCell(row: any, field: string) {
   const value = getNestedValue(row, field);
   
   if (field.toLowerCase().endsWith("date") && value) return formattedDate(value);

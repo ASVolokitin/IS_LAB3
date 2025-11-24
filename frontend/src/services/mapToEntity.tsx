@@ -6,6 +6,7 @@ import { TicketEvent } from "../interfaces/TicketEvent";
 import { EntityData, EntityType } from "../types/ConnectedObject";
 import { Location } from "../interfaces/Location";
 import { formattedDate } from "./format";
+import { ImportHistoryItem } from "../interfaces/ImportHistoryItem";
 
 export const mapTicketToEntity = (ticket: Ticket): EntityData => ({
   id: ticket.id,
@@ -89,6 +90,17 @@ export const mapLocationToEntity = (location: Location): EntityData => ({
   },
 });
 
+export const mapImportHistoryItemToEntity = (importHistoryItem: ImportHistoryItem): EntityData => ({
+  id: importHistoryItem.id,
+  title: importHistoryItem.filename,
+  description: importHistoryItem.resultDescription  || "No description",
+  type: "import_history",
+  data: {
+    importedAt: importHistoryItem.importedAt,
+    importStatus: importHistoryItem.importStatus,
+  },
+});
+
 export const mapEntitiesByType = (
   entities: any[],
   type: EntityType
@@ -99,7 +111,8 @@ export const mapEntitiesByType = (
     persons: mapPersonToEntity,
     venues: mapVenueToEntity,
     events: mapEventToEntity,
-    locations: mapLocationToEntity
+    locations: mapLocationToEntity,
+    import_history: mapImportHistoryItemToEntity
   };
 
   return entities.map(mapper[type]);
