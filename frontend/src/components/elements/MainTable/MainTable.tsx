@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Ticket } from "../../../interfaces/Ticket";
 import React from "react";
 import { columns } from "../../../interfaces/dataRepresentation/mainTableColumns";
-import { renderCell } from "../../../services/mainPageUtils";
+import { renderCell } from "../../../services/tableUtils";
 
 import "./../Button/Button.css";
 import { Filter } from "../../../interfaces/FilterInterface";
