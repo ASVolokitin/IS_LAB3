@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -54,8 +55,7 @@ public class TicketService {
         Specification<Ticket> spec = null;
 
         for (var entry : filters.entrySet()) {
-            Specification<Ticket> filterSpec =
-             GenericSpecification.stringContains(entry.getKey(), entry.getValue());
+            Specification<Ticket> filterSpec = GenericSpecification.stringContains(entry.getKey(), entry.getValue());
             if (filterSpec != null) {
                 spec = (spec == null) ? filterSpec : spec.and(filterSpec);
             }
@@ -71,11 +71,29 @@ public class TicketService {
                 .orElseThrow(() -> new TicketNotFoundException(id));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void deleteTicketById(Long id) {
 
+        Ticket ticket = getTicketById(id);
+        ticketRepository.delete(ticket);
+        WebSocketEvent event = new WebSocketEvent(WebSocketEventType.DELETED, id);
+        webSocketController.sendTicketEvent(event);
+    }
+
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    public void deleteTicketsByIdUncommitted(Long id) {
+
+        Ticket ticket = getTicketById(id);
+        ticketRepository.delete(ticket);
+        WebSocketEvent event = new WebSocketEvent(WebSocketEventType.DELETED, id);
+        webSocketController.sendTicketEvent(event);
+    }
+
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    public void deleteTicketsByIdNative(Long id) {
         int deletedCount = ticketRepository.deleteByIdAndReturnCount(id);
-        if (deletedCount == 0) throw new TicketNotFoundException(id);
+        if (deletedCount == 0)
+            throw new TicketNotFoundException(id);
         else {
             WebSocketEvent event = new WebSocketEvent(WebSocketEventType.DELETED, id);
             webSocketController.sendTicketEvent(event);

@@ -74,11 +74,27 @@ public class TicketController {
         return new ResponseEntity<>(ticketService.getTicketById(id), HttpStatus.OK);
     }
 
+    // shoud delete one, than return concurrency error
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTicketsById(@PathVariable Long id) {
         ticketService.deleteTicketById(id);
         return new ResponseEntity<>(successfulDeletionById("ticket", id), HttpStatus.OK);
     }
+
+    // should delete multiple times
+    @DeleteMapping("/{id}/uncommitted")
+    public ResponseEntity<?> deleteTicketsByIdUncommitted(@PathVariable Long id) {
+        ticketService.deleteTicketsByIdUncommitted(id);
+        return new ResponseEntity<>(successfulDeletionById("ticket", id), HttpStatus.OK);
+    }
+
+    // should delete once, then return not found exception
+    @DeleteMapping("/{id}/native")
+    public ResponseEntity<?> deleteTicketsByIdNative(@PathVariable Long id) {
+        ticketService.deleteTicketsByIdNative(id);
+        return new ResponseEntity<>(successfulDeletionById("ticket", id), HttpStatus.OK);
+    }
+
 
     @PostMapping
     public ResponseEntity<?> createTicket(@Valid @RequestBody TicketRequest request) {
