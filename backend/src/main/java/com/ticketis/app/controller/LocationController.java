@@ -10,6 +10,7 @@ import com.ticketis.app.service.LocationService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,9 +29,14 @@ public class LocationController {
 
     private final LocationService locationService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<Location> getAllLocations() {
         return locationService.getAllLocations();
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getLocationsage(Pageable pageable) {
+        return new ResponseEntity<>(locationService.getLocationsPage(pageable), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

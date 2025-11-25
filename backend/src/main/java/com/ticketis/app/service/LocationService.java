@@ -4,11 +4,14 @@ import com.ticketis.app.controller.WebSocketEventController;
 import com.ticketis.app.dto.WebSocketEvent;
 import com.ticketis.app.dto.request.LocationRequest;
 import com.ticketis.app.exception.notfoundexception.LocationNotFoundException;
+import com.ticketis.app.model.Coordinates;
 import com.ticketis.app.model.Location;
 import com.ticketis.app.model.enums.WebSocketEventType;
 import com.ticketis.app.repository.LocationRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,10 @@ public class LocationService {
 
     public List<Location> getAllLocations() {
         return locationRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    }
+
+    public Page<Location> getLocationsPage(Pageable pageable) {
+        return locationRepository.findAll(pageable);
     }
 
     public Location getLocationById(Long id) {

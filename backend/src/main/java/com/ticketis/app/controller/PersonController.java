@@ -10,6 +10,7 @@ import com.ticketis.app.service.PersonService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,10 +30,16 @@ public class PersonController {
 
     private final PersonService personService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<Person> getAllPersons() {
         return personService.getAllPersons();
     }
+
+    @GetMapping
+    public ResponseEntity<?> getPersonsPage(Pageable pageable) {
+        return new ResponseEntity<>(personService.getPersonsPage(pageable), HttpStatus.OK);
+    }
+
 
     @GetMapping("/{id}")
     public Person getPersonsById(@PathVariable Long id) {

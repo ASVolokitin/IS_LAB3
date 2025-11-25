@@ -4,11 +4,14 @@ import com.ticketis.app.controller.WebSocketEventController;
 import com.ticketis.app.dto.WebSocketEvent;
 import com.ticketis.app.dto.request.EventRequest;
 import com.ticketis.app.exception.notfoundexception.EventNotFoundException;
+import com.ticketis.app.model.Coordinates;
 import com.ticketis.app.model.Event;
 import com.ticketis.app.model.enums.WebSocketEventType;
 import com.ticketis.app.repository.EventRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +26,10 @@ public class EventService {
 
     public List<Event> getAllEvents() {
         return eventRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    }
+
+    public Page<Event> getEventsPage(Pageable pageable) {
+        return eventRepository.findAll(pageable);
     }
 
     public Event getEventById(Integer id) {

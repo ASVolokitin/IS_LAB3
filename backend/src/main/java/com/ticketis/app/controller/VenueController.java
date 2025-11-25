@@ -10,6 +10,7 @@ import com.ticketis.app.service.VenueService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,9 +30,14 @@ public class VenueController {
     
     private final VenueService venueService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<Venue> getAllVenues() {
         return venueService.getAllVenues();
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getVenuesPage(Pageable pageable) {
+        return new ResponseEntity<>(venueService.getVenuesPage(pageable), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

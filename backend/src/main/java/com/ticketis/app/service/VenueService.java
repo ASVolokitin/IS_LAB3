@@ -4,11 +4,14 @@ import com.ticketis.app.controller.WebSocketEventController;
 import com.ticketis.app.dto.WebSocketEvent;
 import com.ticketis.app.dto.request.VenueRequest;
 import com.ticketis.app.exception.notfoundexception.VenueNotFoundException;
+import com.ticketis.app.model.Coordinates;
 import com.ticketis.app.model.Venue;
 import com.ticketis.app.model.enums.WebSocketEventType;
 import com.ticketis.app.repository.VenueRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +26,10 @@ public class VenueService {
 
     public List<Venue> getAllVenues() {
         return venueRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    }
+
+    public Page<Venue> getVenuesPage(Pageable pageable) {
+        return venueRepository.findAll(pageable);
     }
 
     public Venue getVenueById(int id) {

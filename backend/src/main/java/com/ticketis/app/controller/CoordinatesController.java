@@ -10,6 +10,7 @@ import com.ticketis.app.service.CoordinatesService;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,9 +31,14 @@ public class CoordinatesController {
 
     private final CoordinatesService coordinatesService;
 
-    @GetMapping
+    @GetMapping("/all")
     public List<Coordinates> getAllCoordinates() {
         return coordinatesService.getALlCoordinates();
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getCoordinatesPage(Pageable pageable) {
+        return new ResponseEntity<>(coordinatesService.getCoordinatesPage(pageable), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

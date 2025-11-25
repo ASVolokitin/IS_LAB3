@@ -6,13 +6,23 @@ import com.ticketis.app.dto.request.PersonRequest;
 import com.ticketis.app.exception.notfoundexception.LocationNotFoundException;
 import com.ticketis.app.exception.notfoundexception.PersonNotFoundException;
 import com.ticketis.app.model.Person;
+import com.ticketis.app.model.Ticket;
 import com.ticketis.app.model.enums.WebSocketEventType;
 import com.ticketis.app.repository.LocationRepository;
 import com.ticketis.app.repository.PersonRepository;
+import com.ticketis.app.specification.GenericSpecification;
+
 import java.util.List;
+import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +35,10 @@ public class PersonService {
 
     public List<Person> getAllPersons() {
         return personRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    }
+
+    public Page<Person> getPersonsPage(Pageable pageable) {
+        return personRepository.findAll(pageable);
     }
 
     public Person getPersonById(Long id) {

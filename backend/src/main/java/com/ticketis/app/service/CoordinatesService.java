@@ -5,10 +5,13 @@ import com.ticketis.app.dto.WebSocketEvent;
 import com.ticketis.app.dto.request.CoordinatesRequest;
 import com.ticketis.app.exception.notfoundexception.CoordinatesNotFoundException;
 import com.ticketis.app.model.Coordinates;
+import com.ticketis.app.model.Person;
 import com.ticketis.app.model.enums.WebSocketEventType;
 import com.ticketis.app.repository.CoordinatesRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,10 @@ public class CoordinatesService {
     
     public List<Coordinates> getALlCoordinates() {
         return coordinatesRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
+    }
+    
+    public Page<Coordinates> getCoordinatesPage(Pageable pageable) {
+        return coordinatesRepository.findAll(pageable);
     }
 
     public Coordinates getCoordinatesById(Long id) {
