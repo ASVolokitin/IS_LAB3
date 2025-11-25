@@ -1,11 +1,11 @@
-package com.ticketis.app.exception;
+package com.ticketis.app.exception.importBusinessException;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class UnableToGetNecessaryFieldException extends RuntimeException {
+public class UnableToGetNecessaryFieldException extends ImportBusinessException {
 
     private String fieldType;
     private String objectType;

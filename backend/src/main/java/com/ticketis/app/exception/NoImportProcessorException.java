@@ -1,4 +1,6 @@
-package com.ticketis.app.exception.importBusinessException;
+package com.ticketis.app.exception;
+
+import com.ticketis.app.exception.importBusinessException.ImportBusinessException;
 
 public class NoImportProcessorException extends ImportBusinessException {
 
