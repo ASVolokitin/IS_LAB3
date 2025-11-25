@@ -6,6 +6,7 @@ import com.ticketis.app.dto.request.SellTicketRequest;
 import com.ticketis.app.dto.request.TicketRequest;
 import com.ticketis.app.dto.sql.CoordinatesTicketCount;
 import com.ticketis.app.exception.PersonAlreadyOwnsThisTicketException;
+import com.ticketis.app.exception.TicketNameAlreadyExistsException;
 import com.ticketis.app.exception.notfoundexception.CoordinatesNotFoundException;
 import com.ticketis.app.exception.notfoundexception.EventNotFoundException;
 import com.ticketis.app.exception.notfoundexception.PersonNotFoundException;
@@ -157,6 +158,23 @@ public class TicketService {
 
         WebSocketEvent event = new WebSocketEvent(WebSocketEventType.UPDATED, id);
         webSocketController.sendTicketEvent(event);
+    }
+
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public void increasePrice(Long id, Long price) {
+        Ticket ticket = getTicketById(id);
+        ticket.setPrice(ticket.getPrice() + price);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void increasePriceUncommitted(Long id, Long price) {
+        Ticket ticket = getTicketById(id);
+        ticket.setPrice(ticket.getPrice() + price);
+    }
+
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    public void increasePriceNative(Long id, Long price) {
+        ticketRepository.increasePriceNative(id, price);
     }
 
     public List<CoordinatesTicketCount> countTicketsGroupedByCoordinates() {

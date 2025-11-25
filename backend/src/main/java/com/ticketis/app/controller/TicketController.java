@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -74,6 +75,8 @@ public class TicketController {
         return new ResponseEntity<>(ticketService.getTicketById(id), HttpStatus.OK);
     }
 
+    // MUTITHREAD DELETE
+
     // shoud delete one, than return concurrency error
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTicketsById(@PathVariable Long id) {
@@ -81,7 +84,7 @@ public class TicketController {
         return new ResponseEntity<>(successfulDeletionById("ticket", id), HttpStatus.OK);
     }
 
-    // should delete multiple times
+    // should delete multiple times (same with COMMITTED)
     @DeleteMapping("/{id}/uncommitted")
     public ResponseEntity<?> deleteTicketsByIdUncommitted(@PathVariable Long id) {
         ticketService.deleteTicketsByIdUncommitted(id);
@@ -106,6 +109,29 @@ public class TicketController {
     public ResponseEntity<?> updateTickets(
             @PathVariable Long id, @Valid @RequestBody TicketRequest request) {
         ticketService.updateTicket(id, request);
+        return new ResponseEntity<>(successfulUpdateById("ticket", id), HttpStatus.OK);
+    }
+
+    // MULTITHREAD UPDATE
+
+    // should increase once-twice, then return concurrency error (same with COMMITTED)
+    @PostMapping("/{id}/increase_price")
+    public ResponseEntity<?> increasePrice(@PathVariable Long id, @RequestParam Long price) {
+        ticketService.increasePrice(id, price);
+        return new ResponseEntity<>(successfulUpdateById("ticket", id), HttpStatus.OK);
+    }
+
+    // should not return any errors, in fact only a part of the operations will be completed successfully
+    @PostMapping("/{id}/increase_price/uncommitted")
+    public ResponseEntity<?> increasePriceUncommitted(@PathVariable Long id, @RequestParam Long price) {
+        ticketService.increasePriceUncommitted(id, price);
+        return new ResponseEntity<>(successfulUpdateById("ticket", id), HttpStatus.OK);
+    }
+    
+    // should consistently apply balance change operations
+    @PostMapping("/{id}/increase_price/native")
+    public ResponseEntity<?> increasePriceNative(@PathVariable Long id, @RequestParam Long price) {
+        ticketService.increasePriceNative(id, price);
         return new ResponseEntity<>(successfulUpdateById("ticket", id), HttpStatus.OK);
     }
 
