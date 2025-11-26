@@ -6,6 +6,8 @@ import { SortOrder } from "../types/SortOrder";
 import { devLog } from "../services/logger";
 import { Filter } from "../interfaces/FilterInterface";
 import { buildFilterParams } from "../components/elements/FilterControls/FilterControls";
+import { WebSocketEvent } from "../types/WebSocketEvent";
+import { IMessage } from "@stomp/stompjs";
 
 
 export function useEntities<T>(
@@ -103,9 +105,17 @@ export function useEntities<T>(
 
   useEffect(() => {
     refreshEntities();
-    const subscription = webSocketService.subscribe(`/topic/${entityType}`, () => {
-      devLog.log(`[WS] Refreshing entities for type: ${entityType}`);
-      refreshEntities();
+    const subscription = webSocketService.subscribe(`/topic/${entityType}`, (msg: IMessage) => {
+      try {
+        const event: WebSocketEvent = JSON.parse(msg.body);
+        devLog.log(`[WS] Received event for ${entityType}:`, event);
+        devLog.log(`[WS] Event type: ${event.eventType}, Entity ID: ${event.entityId}, Timestamp: ${event.timestamp}`);
+
+        refreshEntities();
+      } catch (error) {
+        devLog.error(`[WS] Error parsing WebSocket message:`, error);
+        refreshEntities();
+      }
     });
     return () => {
       devLog.log(`[WS] Unsubscribing from topic: /topic/${entityType}`);
