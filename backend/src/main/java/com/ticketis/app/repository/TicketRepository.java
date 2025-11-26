@@ -45,4 +45,13 @@ public interface TicketRepository extends JpaRepository<Ticket, Long>,
     @Modifying
     @Query("DELETE FROM Ticket t WHERE t.id = :id")
     int deleteByIdAndReturnCount(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Ticket t SET t.price = t.price + :price WHERE t.id = :id")
+    void increasePriceNative(@Param("id") Long id, @Param("price") Long price);
+
+    boolean existsByName(String name);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM tickets WHERE name = :name AND id != :excludeId)", nativeQuery = true)
+    boolean existsByNameExcludingId(@Param("name") String name, @Param("excludeId") Long excludeId);
 }
