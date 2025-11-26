@@ -7,12 +7,14 @@ import com.ticketis.app.model.enums.TicketType;
 import com.ticketis.app.model.enums.VenueType;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -20,6 +22,24 @@ import org.springframework.stereotype.Service;
 public class ImportValidator {
 
     private final Validator validator;
+
+
+    public void validateFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be empty");
+        }
+
+        if (file.getSize() == 0) {
+            throw new IllegalArgumentException("File size cannot be zero");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || !originalFilename.toLowerCase().endsWith(".json")) {
+            throw new IllegalArgumentException("Only JSON files are supported for import");
+        }
+    }
+
+
     
     public <T> List<String> validateEntity(T entity) {
         List<String> errors = new ArrayList<>();
@@ -30,10 +50,58 @@ public class ImportValidator {
                 violation.getPropertyPath().toString(), 
                 violation.getMessage());
             errors.add(error);
-            log.warn("Validation error: {}", error);
+            log.debug("Validation error: {}", error);
         }
         
         return errors;
+    }
+
+    private void validateRequiredField(JsonNode node, String fieldName, String entityType, List<String> errors) {
+        if (node == null || node.isNull()) {
+            errors.add(String.format("%s.%s is required", entityType, fieldName));
+        }
+    }
+
+    private String getRequiredText(JsonNode node, String fieldName, String entityType, List<String> errors) {
+        validateRequiredField(node, fieldName, entityType, errors);
+        if (node != null && !node.isNull() && node.isTextual()) {
+            String value = node.asText();
+            if (value.isBlank()) {
+                errors.add(String.format("%s.%s cannot be blank", entityType, fieldName));
+            }
+            return value;
+        }
+        return null;
+    }
+
+    private Integer getRequiredInt(JsonNode node, String fieldName, String entityType, List<String> errors) {
+        validateRequiredField(node, fieldName, entityType, errors);
+        if (node != null && !node.isNull() && node.isInt()) {
+            return node.asInt();
+        } else if (node != null && !node.isNull() && !node.isInt()) {
+            errors.add(String.format("%s.%s must be an integer", entityType, fieldName));
+        }
+        return null;
+    }
+
+    private Long getRequiredLong(JsonNode node, String fieldName, String entityType, List<String> errors) {
+        validateRequiredField(node, fieldName, entityType, errors);
+        if (node != null && !node.isNull() && node.isNumber()) {
+            return node.asLong();
+        } else if (node != null && !node.isNull() && !node.isNumber()) {
+            errors.add(String.format("%s.%s must be a number", entityType, fieldName));
+        }
+        return null;
+    }
+
+    private Double getRequiredDouble(JsonNode node, String fieldName, String entityType, List<String> errors) {
+        validateRequiredField(node, fieldName, entityType, errors);
+        if (node != null && !node.isNull() && node.isNumber()) {
+            return node.asDouble();
+        } else if (node != null && !node.isNull() && !node.isNumber()) {
+            errors.add(String.format("%s.%s must be a number", entityType, fieldName));
+        }
+        return null;
     }
 
     public List<String> validateCoordinates(JsonNode coordinatesNode) {
@@ -44,25 +112,14 @@ public class ImportValidator {
             return errors;
         }
         
-        JsonNode xNode = coordinatesNode.get("x");
-        JsonNode yNode = coordinatesNode.get("y");
-        
-        if (xNode == null || !xNode.isInt()) {
-            errors.add("Coordinates.x must be an integer");
-        } else {
-            int x = xNode.asInt();
-            if (x < -200) {
-                errors.add("Coordinates.x must be >= -200, got: " + x);
-            }
+        Integer x = getRequiredInt(coordinatesNode.get("x"), "x", "coordinates", errors);
+        if (x != null && x < -200) {
+            errors.add("Coordinates.x must be >= -200, got: " + x);
         }
         
-        if (yNode == null || !yNode.isNumber()) {
-            errors.add("Coordinates.y must be a number");
-        } else {
-            double y = yNode.asDouble();
-            if (y < -4) {
-                errors.add("Coordinates.y must be >= -4, got: " + y);
-            }
+        Double y = getRequiredDouble(coordinatesNode.get("y"), "y", "coordinates", errors);
+        if (y != null && y < -4) {
+            errors.add("Coordinates.y must be >= -4, got: " + y);
         }
         
         return errors;
@@ -80,16 +137,9 @@ public class ImportValidator {
             return errors;
         }
         
-        JsonNode xNode = locationNode.get("x");
-        JsonNode zNode = locationNode.get("z");
-        
-        if (xNode == null || !xNode.isNumber()) {
-            errors.add("Location.x must be a number");
-        }
-        
-        if (zNode == null || !zNode.isNumber()) {
-            errors.add("Location.z must be a number");
-        }
+        getRequiredDouble(locationNode.get("x"), "x", "location", errors);
+        getRequiredInt(locationNode.get("y"), "y", "location", errors);
+        getRequiredDouble(locationNode.get("z"), "z", "location", errors);
         
         return errors;
     }
@@ -106,48 +156,36 @@ public class ImportValidator {
             return errors;
         }
         
-        JsonNode eyeColorNode = personNode.get("eyeColor");
-        JsonNode hairColorNode = personNode.get("hairColor");
-        JsonNode passportIDNode = personNode.get("passportID");
+        String eyeColorStr = getRequiredText(personNode.get("eyeColor"), "eyeColor", "person", errors);
+        String hairColorStr = getRequiredText(personNode.get("hairColor"), "hairColor", "person", errors);
+        String passportID = getRequiredText(personNode.get("passportID"), "passportID", "person", errors);
         
-        if (eyeColorNode == null || !eyeColorNode.isTextual()) {
-            errors.add("Person.eyeColor must be a string");
-        } else {
+        if (eyeColorStr != null) {
             try {
-                Color.valueOf(eyeColorNode.asText().toUpperCase());
+                Color.valueOf(eyeColorStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                errors.add("Person.eyeColor must be one of: GREEN, BLUE, YELLOW, WHITE");
+                errors.add("Person.eyeColor must be one of: " + String.join(", ", Color.getNames()));
             }
         }
         
-        if (hairColorNode == null || !hairColorNode.isTextual()) {
-            errors.add("Person.hairColor must be a string");
-        } else {
+        if (hairColorStr != null) {
             try {
-                Color.valueOf(hairColorNode.asText().toUpperCase());
+                Color.valueOf(hairColorStr.toUpperCase());
             } catch (IllegalArgumentException e) {
-                errors.add("Person.hairColor must be one of: GREEN, BLUE, YELLOW, WHITE");
+                errors.add("Person.hairColor must be one of: " + String.join(", ", Color.getNames()));
             }
         }
         
-        if (passportIDNode == null || !passportIDNode.isTextual()) {
-            errors.add("Person.passportID must be a non-empty string");
-        } else {
-            String passportID = passportIDNode.asText();
-            if (passportID.isBlank()) {
-                errors.add("Person.passportID cannot be blank");
-            }
-            if (passportID.length() > 29) {
-                errors.add("Person.passportID must be <= 29 characters, got: " + passportID.length());
-            }
+        if (passportID != null && passportID.length() > 29) {
+            errors.add("Person.passportID must be <= 29 characters, got: " + passportID.length());
         }
         
         JsonNode nationalityNode = personNode.get("nationality");
-        if (nationalityNode != null && nationalityNode.isTextual()) {
+        if (nationalityNode != null && !nationalityNode.isNull() && nationalityNode.isTextual()) {
             try {
                 Country.valueOf(nationalityNode.asText().toUpperCase());
             } catch (IllegalArgumentException e) {
-                errors.add("Person.nationality must be one of: RUSSIA, USA, CHINA, ITALY");
+                errors.add("Person.nationality must be one of: " + String.join(", ", Country.getNames()));
             }
         }
         
@@ -171,16 +209,8 @@ public class ImportValidator {
             return errors;
         }
         
-        JsonNode nameNode = eventNode.get("name");
-        JsonNode descriptionNode = eventNode.get("description");
-        
-        if (nameNode == null || !nameNode.isTextual() || nameNode.asText().isBlank()) {
-            errors.add("Event.name must be a non-empty string");
-        }
-        
-        if (descriptionNode == null || !descriptionNode.isTextual()) {
-            errors.add("Event.description must be a non-empty string");
-        }
+        getRequiredText(eventNode.get("name"), "name", "event", errors);
+        getRequiredText(eventNode.get("description"), "description", "event", errors);
         
         return errors;
     }
@@ -193,28 +223,19 @@ public class ImportValidator {
             return errors;
         }
         
-        JsonNode nameNode = venueNode.get("name");
-        JsonNode capacityNode = venueNode.get("capacity");
+        getRequiredText(venueNode.get("name"), "name", "venue", errors);
         
-        if (nameNode == null || !nameNode.isTextual() || nameNode.asText().isBlank()) {
-            errors.add("Venue.name must be a non-empty string");
-        }
-        
-        if (capacityNode == null || !capacityNode.isInt()) {
-            errors.add("Venue.capacity must be a positive integer");
-        } else {
-            int capacity = capacityNode.asInt();
-            if (capacity <= 0) {
-                errors.add("Venue.capacity must be > 0, got: " + capacity);
-            }
+        Integer capacity = getRequiredInt(venueNode.get("capacity"), "capacity", "venue", errors);
+        if (capacity != null && capacity <= 0) {
+            errors.add("Venue.capacity must be > 0, got: " + capacity);
         }
         
         JsonNode typeNode = venueNode.get("type");
-        if (typeNode != null && typeNode.isTextual()) {
+        if (typeNode != null && !typeNode.isNull() && typeNode.isTextual()) {
             try {
                 VenueType.valueOf(typeNode.asText().toUpperCase());
             } catch (IllegalArgumentException e) {
-                errors.add("Venue.type must be one of: PUB, LOFT, OPEN_AREA, MALL");
+                errors.add("Venue.type must be one of: " + String.join(", ", VenueType.getNames()));
             }
         }
         
@@ -229,44 +250,25 @@ public class ImportValidator {
             return errors;
         }
         
-        JsonNode nameNode = ticketNode.get("name");
-        if (nameNode == null || !nameNode.isTextual() || nameNode.asText().isBlank()) {
-            errors.add("Ticket.name must be a non-empty string");
-        }
+        getRequiredText(ticketNode.get("name"), "name", "ticket", errors);
         
         JsonNode coordinatesNode = ticketNode.get("coordinates");
-        if (coordinatesNode == null && ticketNode.get("coordinatesId") == null) {
+        JsonNode coordinatesIdNode = ticketNode.get("coordinatesId");
+        
+        if (coordinatesNode == null && coordinatesIdNode == null) {
             errors.add("Ticket must have either coordinates object or coordinatesId");
-        } else if (coordinatesNode != null) {
+        } else if (coordinatesNode != null && !coordinatesNode.isNull()) {
             errors.addAll(validateCoordinates(coordinatesNode));
         }
         
-        JsonNode priceNode = ticketNode.get("price");
-        if (priceNode == null || !priceNode.isNumber()) {
-            errors.add("Ticket.price must be a positive number");
-        } else {
-            long price = priceNode.asLong();
-            if (price <= 0) {
-                errors.add("Ticket.price must be > 0, got: " + price);
-            }
+        Long price = getRequiredLong(ticketNode.get("price"), "price", "ticket", errors);
+        if (price != null && price <= 0) {
+            errors.add("Ticket.price must be > 0, got: " + price);
         }
         
-        JsonNode discountNode = ticketNode.get("discount");
-        if (discountNode != null && discountNode.isNumber()) {
-            double discount = discountNode.asDouble();
-            if (discount <= 0 || discount > 100) {
-                errors.add("Ticket.discount must be between 0 and 100, got: " + discount);
-            }
-        }
-        
-        JsonNode numberNode = ticketNode.get("number");
-        if (numberNode == null || !numberNode.isNumber()) {
-            errors.add("Ticket.number must be a positive number");
-        } else {
-            double number = numberNode.asDouble();
-            if (number <= 0) {
-                errors.add("Ticket.number must be > 0, got: " + number);
-            }
+        Double number = getRequiredDouble(ticketNode.get("number"), "number", "ticket", errors);
+        if (number != null && number <= 0) {
+            errors.add("Ticket.number must be > 0, got: " + number);
         }
         
         JsonNode refundableNode = ticketNode.get("refundable");
@@ -275,18 +277,28 @@ public class ImportValidator {
         }
         
         JsonNode venueNode = ticketNode.get("venue");
-        if (venueNode == null && ticketNode.get("venueId") == null) {
+        JsonNode venueIdNode = ticketNode.get("venueId");
+        
+        if (venueNode == null && venueIdNode == null) {
             errors.add("Ticket must have either venue object or venueId");
-        } else if (venueNode != null) {
+        } else if (venueNode != null && !venueNode.isNull()) {
             errors.addAll(validateVenue(venueNode));
         }
         
+        JsonNode discountNode = ticketNode.get("discount");
+        if (discountNode != null && !discountNode.isNull() && discountNode.isNumber()) {
+            double discount = discountNode.asDouble();
+            if (discount <= 0 || discount > 100) {
+                errors.add("Ticket.discount must be between 0 and 100, got: " + discount);
+            }
+        }
+        
         JsonNode typeNode = ticketNode.get("type");
-        if (typeNode != null && typeNode.isTextual()) {
+        if (typeNode != null && !typeNode.isNull() && typeNode.isTextual()) {
             try {
                 TicketType.valueOf(typeNode.asText().toUpperCase());
             } catch (IllegalArgumentException e) {
-                errors.add("Ticket.type must be one of: VIP, USUAL, BUDGETARY, CHEAP");
+                errors.add("Ticket.type must be one of: " + String.join(", ", TicketType.getNames()));
             }
         }
         
@@ -303,6 +315,3 @@ public class ImportValidator {
         return errors;
     }
 }
-
-
-
