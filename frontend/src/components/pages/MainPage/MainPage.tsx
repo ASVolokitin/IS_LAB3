@@ -133,7 +133,7 @@ const MainPage = () => {
       <PageNav
         page={page.page}
         size={page.size}
-        ticketsAmount={entitiesAmount}
+        entitiesAmount={entitiesAmount}
         onPageChange={handlePageChange}
       />
       {activeModal.type === "editTickets" && (
