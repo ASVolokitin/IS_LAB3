@@ -1,7 +1,7 @@
 package com.ticketis.app.controller;
 
 import com.ticketis.app.dto.response.ImportResponse;
-import com.ticketis.app.service.fileImport.ImportOrchestratorService;
+import com.ticketis.app.service.fileImport.FileImportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -18,11 +18,11 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/import")
 public class ImportController {
 
-    private final ImportOrchestratorService importService;
+    private final FileImportService fileImportService;
 
     @GetMapping
     public ResponseEntity<?> getAllImports(Pageable pageable) {
-        return new ResponseEntity<>(importService.getImportsPage(pageable), HttpStatus.OK);
+        return new ResponseEntity<>(fileImportService.getImportsPage(pageable), HttpStatus.OK);
     }
 
     @PostMapping
@@ -30,7 +30,7 @@ public class ImportController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "entityType", required = false) String entityType) {
         
-        ImportResponse response = importService.importFile(file, entityType);
+        ImportResponse response = fileImportService.importFile(file, entityType);
         return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
     }
 }

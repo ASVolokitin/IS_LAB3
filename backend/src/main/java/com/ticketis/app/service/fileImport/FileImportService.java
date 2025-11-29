@@ -1,5 +1,7 @@
 package com.ticketis.app.service.fileImport;
 
+import com.ticketis.app.controller.WebSocketEventController;
+import com.ticketis.app.dto.ImportWebSocketEvent;
 import com.ticketis.app.dto.response.ImportResponse;
 import com.ticketis.app.exception.*;
 import com.ticketis.app.exception.importBusinessException.FileImportValidationException;
@@ -8,6 +10,7 @@ import com.ticketis.app.exception.importBusinessException.UnableToGetNecessaryFi
 import com.ticketis.app.model.ImportHistoryItem;
 import com.ticketis.app.model.ImportResult;
 import com.ticketis.app.model.enums.ImportStatus;
+import com.ticketis.app.model.enums.WebSocketEventType;
 import com.ticketis.app.service.ImportValidator;
 import jakarta.persistence.RollbackException;
 import lombok.RequiredArgsConstructor;
@@ -24,11 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ImportOrchestratorService {
+public class FileImportService {
 
     private final ImportHistoryService historyService;
     private final FileStorageService fileStorageService;
-    private final ImportProcessorDispatcher processorDispatcher;
+    private final ImportOrchestratorService orchestratorService;
+    private final WebSocketEventController webSocketEventController;
     private final ImportValidator validator;
 
     public Page<ImportHistoryItem> getImportsPage(Pageable pageable) {
@@ -43,22 +47,21 @@ public class ImportOrchestratorService {
         try {
             validator.validateFile(file);
 
-            String storedFilename = fileStorageService.storeFile(file);
-            historyService.updateStatus(importItem.getId(), ImportStatus.FILE_UPLOADED, "File uploaded successfully");
+            String uniqueFileName = fileStorageService.storeFile(file, importItem.getFilename());
+            ImportResult result = orchestratorService.startImport(uniqueFileName, entityType);
+            String statusMessage = result.getMessage();
 
-            ImportResult result = processorDispatcher.processImport(storedFilename, entityType);
-
-            String successMessage = String.format("Successfully imported %d %s(s)",
-                    result.getProcessedCount(), entityType);
-            historyService.updateStatus(importItem.getId(), ImportStatus.SUCCESS, successMessage);
 
             return new ImportResponse(
-                    storedFilename,
+                    uniqueFileName,
                     file.getSize(),
-                    successMessage,
+                    statusMessage,
                     entityType,
                     result.getProcessedCount(),
-                    result.getErrorCount());
+                    result.getErrorCount(),
+                    result.getImportHistoryId(),
+                    result.isAsync(),
+                    result.getTotalRecords());
 
         } catch (ImportBusinessException e) {
             handleBusinessError(importItem, e);
@@ -80,6 +83,8 @@ public class ImportOrchestratorService {
         }
 
         historyService.updateStatus(importItem.getId(), status, errorMessage);
+        ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_FAILED, importItem.getId());
+        webSocketEventController.sendImportEvent(event);
         log.warn("Business error during import {}: {}", importItem.getId(), errorMessage);
     }
 
@@ -88,7 +93,10 @@ public class ImportOrchestratorService {
         String errorMessage = detailedMessage != null ? detailedMessage : "System error: " + e.getMessage();
 
         historyService.updateStatus(importItem.getId(), ImportStatus.FAILED, errorMessage);
-        log.error("System error during import {}: {}", importItem.getId(), errorMessage, e);
+        ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_FAILED, importItem.getId());
+        webSocketEventController.sendImportEvent(event);
+
+        log.error("System error during import {}: {}", importItem.getId(), errorMessage);
 
         if (detailedMessage != null && isDatabaseConstraintError(e)) {
             throw new DataIntegrityViolationException(errorMessage, e);
