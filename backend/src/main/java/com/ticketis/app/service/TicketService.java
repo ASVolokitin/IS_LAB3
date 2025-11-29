@@ -24,6 +24,8 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +33,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -99,6 +102,17 @@ public class TicketService {
             WebSocketEvent event = new WebSocketEvent(WebSocketEventType.DELETED, id);
             webSocketController.sendTicketEvent(event);
         }
+    }
+
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public Long saveTicket(Ticket ticket) {
+        if (ticketRepository.existsByName(ticket.getName())) {
+            throw new TicketNameAlreadyExistsException(
+                    String.format("Ticket with name %s' already exists", ticket.getName()));
+        }
+
+        ticket = ticketRepository.save(ticket);
+        return ticket.getId();
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
