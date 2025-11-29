@@ -2,7 +2,7 @@ package com.ticketis.app.importProcessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ticketis.app.exception.FileImportValidationException;
-import com.ticketis.app.exception.UnableToGetNecessaryFieldException;
+import com.ticketis.app.exception.importBusinessException.UnableToGetNecessaryFieldException;
 import com.ticketis.app.model.Coordinates;
 import com.ticketis.app.model.Event;
 import com.ticketis.app.model.Location;
@@ -17,9 +17,9 @@ import com.ticketis.app.repository.CoordinatesRepository;
 import com.ticketis.app.repository.EventRepository;
 import com.ticketis.app.repository.LocationRepository;
 import com.ticketis.app.repository.PersonRepository;
-import com.ticketis.app.repository.TicketRepository;
 import com.ticketis.app.repository.VenueRepository;
 import com.ticketis.app.service.ImportValidator;
+import com.ticketis.app.service.TicketService;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,12 +36,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class TicketImportProcessor implements ImportProcessor {
 
     private final ImportValidator validator;
-    private final TicketRepository ticketRepository;
     private final CoordinatesRepository coordinatesRepository;
     private final VenueRepository venueRepository;
     private final EventRepository eventRepository;
     private final PersonRepository personRepository;
     private final LocationRepository locationRepository;
+
+    private final TicketService ticketService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -77,10 +78,33 @@ public class TicketImportProcessor implements ImportProcessor {
         }
 
         for (Ticket ticket : ticketsToSave) {
-            ticketRepository.save(ticket);
-            log.info("Successfully imported ticket: {}", ticket.getName());
+            ticketService.saveTicket(ticket);
         }
 
+        return errors;
+    }
+
+    public List<String> importEntity(JsonNode node, int nodeIndex) {
+        List<String> errors = new ArrayList<>();
+        String entityPrefix = String.format("Entity[%d]: ", nodeIndex + 1);
+
+        try {
+            List<String> validationErrors = validator.validateTicket(node);
+            if (!validationErrors.isEmpty()) {
+                for (String error : validationErrors) {
+                    errors.add(error);
+                    return errors;
+                }
+            }
+
+            Ticket ticket = buildTicketFromJson(node, errors, entityPrefix);
+            if (ticket != null) {
+                ticketService.saveTicket(ticket);
+            }
+        } catch (UnableToGetNecessaryFieldException e) {
+            log.error("Unable to get necessary field at index {}: {}", nodeIndex, e.getMessage());
+            throw e;
+        }
         return errors;
     }
 
