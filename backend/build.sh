@@ -1,3 +1,3 @@
 clear
 mvn clean package -DskipTests
-docker compose up --build
+docker compose up --build --no-deps backend
