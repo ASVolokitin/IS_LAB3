@@ -1,13 +1,15 @@
 package com.ticketis.app.model;
 
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.ticketis.app.converter.ImportStatusConverter;
+import com.ticketis.app.dto.jms.ImportBatchEntity;
 import com.ticketis.app.model.enums.ImportStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Data
@@ -44,10 +46,19 @@ public class ImportHistoryItem {
 
     @Column(name = "total_records")
     private Integer totalRecords;
-    
-    @Column(name = "processed_records") 
+
+    @Column(name = "processed_records")
     private Integer processedRecords;
-    
+
     @Column(name = "error_count")
     private Integer errorCount;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "importHistoryItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImportBatchEntity> batches;
+
+    public void addBatch(ImportBatchEntity batch) {
+        this.batches.add(batch);
+        batch.setImportHistoryItem(this);
+    }
 }
