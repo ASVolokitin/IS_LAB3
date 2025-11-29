@@ -1,5 +1,7 @@
 package com.ticketis.app.controller;
 
+import com.ticketis.app.dto.ImportProgressEvent;
+import com.ticketis.app.dto.ImportWebSocketEvent;
 import com.ticketis.app.dto.WebSocketEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,5 +49,11 @@ public class WebSocketEventController {
     public void sendVenueEvent(WebSocketEvent event) {
         messagingTemplate.convertAndSend("/topic/venues", event);
         log.info("WS EVENT (venue): {} with id {}", event.getEventType(), event.getEntityId());
+    }
+
+    public void sendImportEvent(ImportWebSocketEvent event) {
+        String topic = "/topic/import_history";
+        messagingTemplate.convertAndSend(topic, event);
+        log.info("WS EVENT (import): {} with id {}", event.getEventType(), event.getImportHistoryId());
     }
 }
