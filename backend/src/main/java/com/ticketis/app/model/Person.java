@@ -11,6 +11,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.Valid;
@@ -43,7 +44,7 @@ public class Person implements Serializable {
     @NotNull
     private Color hairColor; // Поле не может быть null
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @Valid
     private Location location; // Поле может быть null
 
