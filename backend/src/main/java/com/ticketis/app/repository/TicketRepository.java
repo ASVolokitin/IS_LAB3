@@ -52,6 +52,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long>,
 
     boolean existsByName(String name);
 
-    @Query(value = "SELECT EXISTS(SELECT 1 FROM tickets WHERE name = :name AND id != :excludeId)", nativeQuery = true)
-    boolean existsByNameExcludingId(@Param("name") String name, @Param("excludeId") Long excludeId);
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM tickets WHERE name = ?1 AND id != ?2)", nativeQuery = true)
+    boolean existsByNameExcludingId(String name, Long excludeId);
 }
