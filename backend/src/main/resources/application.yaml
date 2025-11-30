@@ -10,7 +10,7 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       pool-name: HikariPool-TicketIS
-      maximum-pool-size: 10
+      maximum-pool-size: 20
       minimum-idle: 5
       idle-timeout: 300000
       connection-timeout: 20000
@@ -19,22 +19,21 @@ spring:
       auto-commit: false
   
   jpa:
-    database-platform: org.eclipse.persistence.platform.database.PostgreSQLPlatform
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     generate-ddl: true
-    show-sql: true
+    show-sql: false
+    hibernate:
+      ddl-auto: update
     properties:
       jakarta:
         persistence:
-          provider: org.eclipse.persistence.jpa.PersistenceProvider
-      eclipselink:
-        target-server: PostgreSQL
-        ddl-generation: create-or-extend-tables
-        ddl-generation.output-mode: database
-        logging:
-          level:
-            sql: FINE
-        weaving: false
-        target-database: PostgreSQL
+          sharedCache:
+            mode: ENABLE_SELECTIVE
+      hibernate:
+        cache:
+          use_second_level_cache: true
+          region:
+            factory_class: infinispan
   
   mvc:
     pathmatch:
@@ -52,6 +51,9 @@ logging:
   level:
     org.apache.activemq.audit: WARN
     org.apache.activemq.audit.message: OFF
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    com.ticketis.app.aspect.CacheStatisticsAspect: INFO
 
 loggers: org.eclipse.jetty,org.jboss.logging,org.apache.activemq.artemis.core.server,org.apache.activemq.artemis.utils,org.apache.activemq.artemis.journal,org.apache.activemq.artemis.jms.server,org.apache.activemq.artemis.integration.bootstrap,org.apache.activemq.audit.base,org.apache.activemq.audit.message,org.apache.activemq.audit.resource
 
@@ -59,6 +61,9 @@ app:
   import:
     upload-dir: uploads/import
     distributed-threshold: 8000
+  cache:
+    statistics:
+      enabled: true
 
 db:
   init:

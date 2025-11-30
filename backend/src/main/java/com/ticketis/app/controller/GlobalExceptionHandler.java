@@ -11,7 +11,7 @@ import com.ticketis.app.exception.notfoundexception.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.persistence.exceptions.DatabaseException;
+import org.hibernate.exception.GenericJDBCException;
 import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -76,8 +76,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(DatabaseException.class)
-    public ResponseEntity<?> handleDatabaseException(DatabaseException exception) {
+    @ExceptionHandler(GenericJDBCException.class)
+    public ResponseEntity<?> handleGenericJDBCException(GenericJDBCException exception) {
         log.warn("Database exception: {}", exception.getMessage());
         PSQLException psqlException = findPSQLException(exception);
         if (psqlException != null && "40001".equals(psqlException.getSQLState())) {
@@ -86,9 +86,9 @@ public class GlobalExceptionHandler {
             return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
         }
 
-        Throwable internalException = exception.getInternalException();
-        if (internalException instanceof PSQLException) {
-            PSQLException internalPsql = (PSQLException) internalException;
+        Throwable cause = exception.getCause();
+        if (cause instanceof PSQLException) {
+            PSQLException internalPsql = (PSQLException) cause;
             if ("40001".equals(internalPsql.getSQLState())) {
                 String message = extractConstraintViolationMessage(internalPsql.getMessage());
                 ErrorResponse errorResponse = new ErrorResponse(message, "Database constraint violation");
@@ -132,8 +132,8 @@ public class GlobalExceptionHandler {
                 String psqlMessage = psqlException.getMessage();
                 errorMessage = extractConstraintViolationMessage(psqlMessage);
                 details = "Database constraint violation: " + errorMessage;
-            } else if (rootCause instanceof DatabaseException) {
-                DatabaseException dbException = (DatabaseException) rootCause;
+            } else if (rootCause instanceof GenericJDBCException) {
+                GenericJDBCException dbException = (GenericJDBCException) rootCause;
                 errorMessage = extractConstraintViolationMessage(dbException.getMessage());
                 details = "Database error during transaction";
             } else if (rootCause != null) {
@@ -165,20 +165,20 @@ public class GlobalExceptionHandler {
             return extractDetailedJpaMessage(persistenceEx.getCause());
         }
 
-        if (throwable instanceof DatabaseException) {
-            DatabaseException dbEx = (DatabaseException) throwable;
-            log.debug("Found DatabaseException, internal exception: {}", dbEx.getInternalException());
+        if (throwable instanceof GenericJDBCException) {
+            GenericJDBCException dbEx = (GenericJDBCException) throwable;
+            log.debug("Found GenericJDBCException, cause: {}", dbEx.getCause());
 
-            Throwable internalException = dbEx.getInternalException();
-            if (internalException instanceof PSQLException) {
-                PSQLException psqlEx = (PSQLException) internalException;
+            Throwable cause = dbEx.getCause();
+            if (cause instanceof PSQLException) {
+                PSQLException psqlEx = (PSQLException) cause;
                 String message = extractConstraintViolationMessage(psqlEx.getMessage());
                 log.debug("Extracted PSQL message: {}", message);
                 return message;
             }
 
             String message = extractConstraintViolationMessage(dbEx.getMessage());
-            log.debug("Extracted message from DatabaseException: {}", message);
+            log.debug("Extracted message from GenericJDBCException: {}", message);
             return message;
         }
 
