@@ -260,8 +260,29 @@ public class ImportBatchWorker {
 
                         historyService.updateStatus(historyId, importStatus, description);
 
-                        ImportWebSocketEvent event = new ImportWebSocketEvent(
-                                        WebSocketEventType.ASYNC_IMPORT_PROGRESS_CHANGED, historyId);
+                        WebSocketEventType eventType = WebSocketEventType.ASYNC_IMPORT_PROGRESS_STARTED;
+                        switch (importStatus) {
+
+                                case PROCESSING:
+                                        eventType = WebSocketEventType.ASYNC_IMPORT_PROGRESS_PROCESSING;
+                                        break;
+
+                                case PARTIAL_SUCCESS:
+                                        eventType = WebSocketEventType.ASYNC_IMPORT_PROGRESS_PARTIAL_SUCCESS;
+                                        break;
+
+                                case SUCCESS:
+                                        eventType = WebSocketEventType.ASYNC_IMPORT_PROGRESS_SUCCESS;
+                                        break;
+
+                                case FAILED:
+                                        eventType = WebSocketEventType.ASYNC_IMPORT_PROGRESS_FAILED;
+                                        break;
+
+                                default:
+                                        eventType = WebSocketEventType.ASYNC_IMPORT_PROGRESS_CHANGED;
+                        }
+                        ImportWebSocketEvent event = new ImportWebSocketEvent(eventType, historyId);
                         webSocketController.sendImportEvent(event);
                 });
         }

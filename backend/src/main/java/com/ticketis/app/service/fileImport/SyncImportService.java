@@ -44,7 +44,7 @@ public class SyncImportService {
             if (i % (nodes.size() / 10) == 0) {
                 historyService.updateStatus(importHistoryId, ImportStatus.PROCESSING,
                         String.format("Processed %d records", i));
-                ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_IN_PROGRESS,
+                ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_PROGRESS_PROCESSING,
                         importHistoryId);
                 webSocketController.sendImportEvent(event);
             }
@@ -53,11 +53,11 @@ public class SyncImportService {
         if (errors.size() == 0) {
             historyService.updateStatus(importHistoryId, ImportStatus.SUCCESS,
                     String.format("Sucessfully imported %d ticket(s)", nodes.size()));
-            ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_FINISHED, importHistoryId);
+            ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_PROGRESS_SUCCESS, importHistoryId);
             webSocketController.sendImportEvent(event);
         } else {
             historyService.updateStatus(importHistoryId, ImportStatus.FAILED, errors.get(0));
-            ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_FAILED, importHistoryId);
+            ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_PROGRESS_FAILED, importHistoryId);
             webSocketController.sendImportEvent(event);
         }
 
