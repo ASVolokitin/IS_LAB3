@@ -108,3 +108,5 @@ export const getTicketsAmountByNumberLess = (number: number) => api.get("/ticket
 export const cancelBookingsByPersonId = (personId: number) => api.post("/tickets/unbook?personId=" + personId);
 
 export const sellTicketToPerson = (sellTicketData: SellTicketDTO) => api.post("tickets/sell", sellTicketData)
+
+export const getImportDownloadUrl = (importId: number) => `${BASE_URL}/imports/${importId}/download`;
