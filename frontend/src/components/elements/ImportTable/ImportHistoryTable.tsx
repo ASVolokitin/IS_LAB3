@@ -3,7 +3,9 @@ import { importTableColumns } from "../../../interfaces/dataRepresentation/impor
 import { ImportHistoryItem } from "../../../interfaces/ImportHistoryItem";
 import { ImportBatch } from "../../../interfaces/ImportBatch";
 import { renderCell } from "../../../services/tableUtils";
+import { getImportDownloadUrl } from "../../../services/api";
 import "../../../sharedStyles/Table.css";
+import { devLog } from "../../../services/logger";
 
 interface ImportTableProps {
     imports: ImportHistoryItem[];
@@ -104,6 +106,11 @@ const BatchRow = ({ batch }: { batch: ImportBatch }) => {
 export const ImportHistoryTable = ({ imports, getBatches, isLoading, refreshBatches }: ImportTableProps) => {
     const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
+    const handleDownload = (importId: number) => {
+        const downloadUrl = getImportDownloadUrl(importId);
+        window.open(downloadUrl, "_blank");
+    };
+
     const toggleRow = (importId: number) => {
         setExpandedRows(prev => {
             const newSet = new Set(prev);
@@ -119,6 +126,8 @@ export const ImportHistoryTable = ({ imports, getBatches, isLoading, refreshBatc
         });
     };
 
+    console.log("imports", imports);
+
     return (
         <table>
             <thead>
@@ -131,15 +140,16 @@ export const ImportHistoryTable = ({ imports, getBatches, isLoading, refreshBatc
                             {col.label}
                         </th>
                     ))}
+                    <th>File</th>
                     <th>Batches</th>
                 </tr>
             </thead>
             {imports && (
                 <tbody>
                     {imports.map((row) => {
+                        devLog.log(row);
                         const isExpanded = expandedRows.has(row.id);
                         const batches = getBatches(row.id);
-                        const loading = isLoading(row.id);
                         
                         return (
                             <>
@@ -161,6 +171,16 @@ export const ImportHistoryTable = ({ imports, getBatches, isLoading, refreshBatc
                                             return <td key={col.field}>{renderCell(row, col.field)}</td>;
                                         }
                                     })}
+                                    <td>
+                                        <div className="button-container">
+                                            <button
+                                                onClick={() => handleDownload(row.id)}
+                                                className="download-btn"
+                                            >
+                                                Download
+                                            </button>
+                                        </div>
+                                    </td>
                                     <td>
                                         <div className="button-container">
                                             <button
