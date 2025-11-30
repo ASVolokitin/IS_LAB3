@@ -47,7 +47,7 @@ public class FileImportService {
         try {
             validator.validateFile(file);
 
-            String uniqueFileName = fileStorageService.storeFile(file, importItem.getFilename());
+            String uniqueFileName = fileStorageService.storeFile(file, importItem.getFilename()).getFileId();
             ImportResult result = orchestratorService.startImport(uniqueFileName, entityType);
             String statusMessage = result.getMessage();
 
