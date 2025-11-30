@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,12 +14,10 @@ public class JsonParser {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<JsonNode> parseJsonFile(Path filePath) throws IOException {
-        log.info("Parsing JSON file: {}", filePath);
+    public static List<JsonNode> parseJsonFile(InputStream inputStream) throws IOException {
+        log.info("Parsing JSON file from InputStream");
 
-        String content = Files.readString(filePath);
-
-        JsonNode rootNode = objectMapper.readTree(content);
+        JsonNode rootNode = objectMapper.readTree(inputStream);
 
         if (rootNode.isArray()) {
             List<JsonNode> nodes = new ArrayList<>();
@@ -36,5 +33,4 @@ public class JsonParser {
             return nodes;
         }
     }
-    
 }
