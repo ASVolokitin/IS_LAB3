@@ -93,6 +93,13 @@ public class ImportBatchWorker {
                                                         e.getMessage());
                                         errors.add("Record " + i + ": " + e.getMessage());
 
+                                        if (isTransactionAbortedException(e)) {
+                                                log.warn("Transaction aborted after record {}, stopping batch processing", i);
+                                                updateBatchProgress(batchMessage.getBatchId(), successCount);
+                                                updateBatchStatus(batchMessage.getBatchId(), BatchStatus.FAILED, successCount);
+                                                // refreshHistoryStatus(batchMessage.getImportHistoryId());
+                                                break;
+                                        }
                                 }
                         }
 
@@ -344,6 +351,28 @@ public class ImportBatchWorker {
                 }
 
                 throw new RuntimeException("Failed to process record after " + MAX_RETRIES + " retries", lastException);
+        }
+
+        private boolean isTransactionAbortedException(Throwable throwable) {
+                if (throwable == null) {
+                        return false;
+                }
+
+                PSQLException psqlException = findPSQLException(throwable);
+                if (psqlException != null && "25P02".equals(psqlException.getSQLState())) {
+                        return true;
+                }
+
+                String message = throwable.getMessage();
+                if (message != null && message.contains("current transaction is aborted")) {
+                        return true;
+                }
+
+                if (throwable.getCause() != null && throwable.getCause() != throwable) {
+                        return isTransactionAbortedException(throwable.getCause());
+                }
+
+                return false;
         }
 
         private boolean isSerializableException(Throwable throwable) {
