@@ -6,6 +6,7 @@ import com.ticketis.app.dto.response.ErrorResponse;
 import com.ticketis.app.dto.response.ValidationErrorResponse;
 import com.ticketis.app.exception.*;
 import com.ticketis.app.exception.importBusinessException.UnableToGetNecessaryFieldException;
+import com.ticketis.app.exception.minio.MinioException;
 import com.ticketis.app.exception.notfoundexception.ResourceNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -410,6 +411,15 @@ public class GlobalExceptionHandler {
                 "Uploaded file exceeds maximum allowed size",
                 "File is too large");
         return new ResponseEntity<>(errorResponse, HttpStatus.PAYLOAD_TOO_LARGE);
+    }
+
+    @ExceptionHandler(MinioException.class)
+    public ResponseEntity<?> handleMinioException(
+            MinioException exception) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                "Minio exception",
+                exception.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     // @ExceptionHandler(Exception.class)
