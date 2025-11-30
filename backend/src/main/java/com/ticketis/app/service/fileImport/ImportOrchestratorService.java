@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.io.InputStream;
 import java.util.List;
 
 import static com.ticketis.app.util.JsonParser.parseJsonFile;
@@ -30,21 +30,23 @@ public class ImportOrchestratorService {
     public ImportResult startImport(String filename, String entityType)
             throws IOException {
 
-        Path filePath = fileStorageService.getFilePath(filename);
 
-        List<JsonNode> nodes = parseJsonFile(filePath);
+        try (InputStream fileStream = fileStorageService.getFile(filename)) {
 
-        if (nodes.isEmpty()) {
-            throw new FileImportValidationException(List.of("No entities found in JSON file"));
-        }
+            List<JsonNode> nodes = parseJsonFile(fileStream);
 
-        Long importHistoryId = importHistoryService.getImportItemNyFilename(filename).getId();
-        if (nodes.size() > asyncThreshold) {
-            log.info("Using asynchronous processing for {} records of type: {}", nodes.size(), entityType);
-            return importAsync(nodes, entityType, filename, importHistoryId);
-        } else {
-            log.info("Using synchronous processing for {} records of type: {}", nodes.size(), entityType);
-            return importSync(nodes, entityType, filename, importHistoryId);
+            if (nodes.isEmpty()) {
+                throw new FileImportValidationException(List.of("No entities found in JSON file"));
+            }
+
+            Long importHistoryId = importHistoryService.getImportItemNyFilename(filename).getId();
+            if (nodes.size() > asyncThreshold) {
+                log.info("Using asynchronous processing for {} records of type: {}", nodes.size(), entityType);
+                return importAsync(nodes, entityType, filename, importHistoryId);
+            } else {
+                log.info("Using synchronous processing for {} records of type: {}", nodes.size(), entityType);
+                return importSync(nodes, entityType, filename, importHistoryId);
+            }
         }
     }
 
