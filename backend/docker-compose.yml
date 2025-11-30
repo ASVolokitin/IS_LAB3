@@ -1,5 +1,34 @@
 services:
 
+  minio:
+    image: quay.io/minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: [ "server", "--console-address", ":9001", "/data" ]
+    volumes:
+      - data-minio:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    networks:
+      - app-network
+
+  minio-buckets:
+    image: quay.io/minio/mc:latest
+    depends_on:
+      - minio
+    restart: on-failure
+    networks:
+      - app-network
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set dockerminio http://minio:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY};
+      /usr/bin/mc mb dockerminio/${MINIO_BUCKET_NAME};
+      exit 0;
+      "
+
+
   postgres:
     image: postgres:16
     environment:
@@ -27,9 +56,15 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_started
     networks:
       - app-network
 
@@ -39,3 +74,4 @@ networks:
 
 volumes:
   postgres_data:
+  data-minio:
