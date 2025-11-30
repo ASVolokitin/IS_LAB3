@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: app
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      pool-name: HikariPool-TicketIS
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
+      auto-commit: false
+  
+  jpa:
+    database-platform: org.eclipse.persistence.platform.database.PostgreSQLPlatform
+    generate-ddl: true
+    show-sql: true
+    properties:
+      jakarta:
+        persistence:
+          provider: org.eclipse.persistence.jpa.PersistenceProvider
+      eclipselink:
+        target-server: PostgreSQL
+        ddl-generation: create-or-extend-tables
+        ddl-generation.output-mode: database
+        logging:
+          level:
+            sql: FINE
+        weaving: false
+        target-database: PostgreSQL
+  
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 3000MB
+      max-request-size: 3000MB
+    autoconfigure:
+        exclude: org.springframework.boot.autoconfigure.web.servlet.MultipartAutoConfiguration
+
+logging:
+  level:
+    org.apache.activemq.audit: WARN
+    org.apache.activemq.audit.message: OFF
+
+loggers: org.eclipse.jetty,org.jboss.logging,org.apache.activemq.artemis.core.server,org.apache.activemq.artemis.utils,org.apache.activemq.artemis.journal,org.apache.activemq.artemis.jms.server,org.apache.activemq.artemis.integration.bootstrap,org.apache.activemq.audit.base,org.apache.activemq.audit.message,org.apache.activemq.audit.resource
+
+app:
+  import:
+    upload-dir: uploads/import
+    distributed-threshold: 8000
+
+db:
+  init:
+    script:
+      path: db/init/01-create-schema.sql
+
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket-name: ${MINIO_BUCKET_NAME:myapp-bucket}
+  presigned-url-expiry: 3600
