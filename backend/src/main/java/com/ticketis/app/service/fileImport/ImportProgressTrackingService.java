@@ -51,7 +51,7 @@ public class ImportProgressTrackingService {
     }
 
     private void sendProgressEvent(ImportProgress progress, WebSocketEventType eventType, String message) {
-        ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.IMPORT_TASK_INITIALIZED, progress.getImportHistoryId());
+        ImportWebSocketEvent event = new ImportWebSocketEvent(eventType, progress.getImportHistoryId());
         webSocketEventController.sendImportEvent(event);
     }
 
@@ -67,13 +67,6 @@ public class ImportProgressTrackingService {
                     progress.getCompletedBatches(), progress.getTotalBatches(),
                     progress.getTotalProcessed(), progress.getTotalRecords());
         }
-    }
-
-    private ImportStatus getOverallStatus(ImportProgress progress) {
-        if (progress.isCompleted()) {
-            return progress.isFailed() ? ImportStatus.FAILED : ImportStatus.SUCCESS;
-        }
-        return ImportStatus.PROCESSING;
     }
 
     private void updateDatabaseStatus(ImportProgress progress) {
