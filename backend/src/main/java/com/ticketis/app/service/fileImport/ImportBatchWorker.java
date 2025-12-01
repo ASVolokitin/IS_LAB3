@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.persistence.exceptions.DatabaseException;
+import org.hibernate.JDBCException;
 import org.postgresql.util.PSQLException;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -94,9 +95,11 @@ public class ImportBatchWorker {
                                         errors.add("Record " + i + ": " + e.getMessage());
 
                                         if (isTransactionAbortedException(e)) {
-                                                log.warn("Transaction aborted after record {}, stopping batch processing", i);
+                                                log.warn("Transaction aborted after record {}, stopping batch processing",
+                                                                i);
                                                 updateBatchProgress(batchMessage.getBatchId(), successCount);
-                                                updateBatchStatus(batchMessage.getBatchId(), BatchStatus.FAILED, successCount);
+                                                updateBatchStatus(batchMessage.getBatchId(), BatchStatus.FAILED,
+                                                                successCount);
                                                 // refreshHistoryStatus(batchMessage.getImportHistoryId());
                                                 break;
                                         }
@@ -385,23 +388,23 @@ public class ImportBatchWorker {
                         return true;
                 }
 
-                if (throwable instanceof DatabaseException) {
-                        DatabaseException dbEx = (DatabaseException) throwable;
-                        String message = dbEx.getMessage();
+                if (throwable instanceof JDBCException) {
+                        JDBCException jdbcEx = (JDBCException) throwable;
+                        String message = jdbcEx.getMessage();
+
                         if (message != null && message.contains(
                                         "could not serialize access due to read/write dependencies among transactions")) {
                                 return true;
                         }
 
-                        Throwable internalException = dbEx.getInternalException();
-                        if (internalException instanceof PSQLException) {
-                                PSQLException internalPsql = (PSQLException) internalException;
-                                if ("40001".equals(internalPsql.getSQLState())) {
+                        SQLException sqlException = jdbcEx.getSQLException();
+                        if (sqlException instanceof PSQLException) {
+                                PSQLException psqlEx = (PSQLException) sqlException;
+                                if ("40001".equals(psqlEx.getSQLState())) {
                                         return true;
                                 }
                         }
                 }
-
                 if (throwable instanceof TransactionSystemException) {
                         return isSerializableException(throwable.getCause());
                 }
@@ -418,11 +421,11 @@ public class ImportBatchWorker {
                         return (PSQLException) throwable;
                 }
 
-                if (throwable instanceof DatabaseException) {
-                        DatabaseException dbEx = (DatabaseException) throwable;
-                        Throwable internalException = dbEx.getInternalException();
-                        if (internalException instanceof PSQLException) {
-                                return (PSQLException) internalException;
+                if (throwable instanceof JDBCException) {
+                        JDBCException jdbcEx = (JDBCException) throwable;
+                        SQLException sqlException = jdbcEx.getSQLException();
+                        if (sqlException instanceof PSQLException) {
+                                return (PSQLException) sqlException;
                         }
                 }
 
