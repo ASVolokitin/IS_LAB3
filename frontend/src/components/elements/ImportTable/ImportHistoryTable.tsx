@@ -172,14 +172,16 @@ export const ImportHistoryTable = ({ imports, getBatches, isLoading, refreshBatc
                                         }
                                     })}
                                     <td>
-                                        <div className="button-container">
-                                            <button
-                                                onClick={() => handleDownload(row.id)}
-                                                className="download-btn"
-                                            >
-                                                Download
-                                            </button>
-                                        </div>
+                                        {String(row.importStatus || "").toUpperCase() === "SUCCESS" && (
+                                            <div className="button-container">
+                                                <button
+                                                    onClick={() => handleDownload(row.id)}
+                                                    className="download-btn"
+                                                >
+                                                    Download
+                                                </button>
+                                            </div>
+                                        )}
                                     </td>
                                     <td>
                                         <div className="button-container">
