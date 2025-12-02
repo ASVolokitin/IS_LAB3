@@ -30,6 +30,7 @@ spring:
           sharedCache:
             mode: ENABLE_SELECTIVE
       hibernate:
+        # generate_statistics: true
         cache:
           use_second_level_cache: true
           region:
