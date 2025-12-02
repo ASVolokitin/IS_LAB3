@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -30,6 +31,7 @@ public class DatabaseInitializer {
     private final DataSource dataSource;
 
     @EventListener(ApplicationReadyEvent.class)
+    @Order(1)
     public void initializeDatabase() {
         try (Connection connection = dataSource.getConnection()) {
             if (needsInitialization(connection)) {
@@ -84,6 +86,8 @@ public class DatabaseInitializer {
                     }
                 }
             }
+            
+            connection.commit();
         }
     }
 }
