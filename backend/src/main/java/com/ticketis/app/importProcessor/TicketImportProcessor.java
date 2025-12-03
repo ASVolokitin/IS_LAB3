@@ -2,6 +2,8 @@ package com.ticketis.app.importProcessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ticketis.app.exception.FileImportValidationException;
+import com.ticketis.app.exception.PassportIdAlreadyExistsException;
+import com.ticketis.app.exception.TicketNameAlreadyExistsException;
 import com.ticketis.app.exception.importBusinessException.UnableToGetNecessaryFieldException;
 import com.ticketis.app.model.Coordinates;
 import com.ticketis.app.model.Event;
@@ -27,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -104,6 +107,12 @@ public class TicketImportProcessor implements ImportProcessor {
         } catch (UnableToGetNecessaryFieldException e) {
             log.error("Unable to get necessary field at index {}: {}", nodeIndex, e.getMessage());
             throw e;
+        } catch (TicketNameAlreadyExistsException e) {
+            log.error("Ticket name integrity restriction violated at index {}: {}", nodeIndex, e.getMessage());
+            throw e;
+        } catch (DataIntegrityViolationException e) {
+            log.error("Ticket name integrity restriction violated at index {}: {}", nodeIndex, e.getMessage());
+            throw new PassportIdAlreadyExistsException();
         }
         return errors;
     }
