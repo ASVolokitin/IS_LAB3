@@ -108,7 +108,7 @@ public class TicketService {
     public Long saveTicket(Ticket ticket) {
         if (ticketRepository.existsByName(ticket.getName())) {
             throw new TicketNameAlreadyExistsException(
-                    String.format("Ticket with name %s' already exists", ticket.getName()));
+                    String.format("Ticket with name '%s' already exists", ticket.getName()));
         }
 
         ticket = ticketRepository.save(ticket);
