@@ -34,4 +34,14 @@ public class JmsConfig {
     public Queue importBatchQueue() {
         return new ActiveMQQueue("import.batch.queue");
     }
+
+    @Bean
+    public Queue fileUploadQueue() {
+        return new ActiveMQQueue("file.upload.queue");
+    }
+
+    @Bean
+    public Queue fileDeleteQueue() {
+        return new ActiveMQQueue("file.delete.queue");
+    }
 }
