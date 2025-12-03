@@ -36,7 +36,7 @@ public class AsyncImportService {
         List<List<JsonNode>> batches = splitIntoBatches(entities);
 
         sendBatchesToQueue(batches, entityType, importHistoryId);
-        trackingService.initializeProgress(importHistoryId, batches.size(), entities.size());
+        trackingService.initializeProgress(importHistoryId, batches.size(), entities.size(), true);
 
         log.info("Sent {} batches to queue for task: {}", batches.size(), importHistoryId);
         return importHistoryId;
