@@ -1,80 +1,147 @@
 package com.ticketis.app.aspect;
 
+import com.ticketis.app.config.CacheStatisticsProperties;
+import com.ticketis.app.model.Ticket;
 import jakarta.persistence.Cache;
-import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.hibernate.SessionFactory;
+import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cache.spi.Region;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 @Aspect
 @Component
 @Slf4j
-@ConditionalOnProperty(name = "app.cache.statistics.enabled", havingValue = "true", matchIfMissing = true)
+@RequiredArgsConstructor
 public class CacheStatisticsAspect {
 
-    private final EntityManagerFactory entityManagerFactory;
+    private final CacheStatisticsProperties cacheStatisticsProperties;
+    
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    public CacheStatisticsAspect(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
-        log.info("CacheStatisticsAspect initialized and ready to log cache statistics!");
-    }
+    private static final String TICKET_CACHE_REGION = Ticket.class.getName();
+    
+    private final AtomicLong cacheHits = new AtomicLong(0);
+    private final AtomicLong cacheMisses = new AtomicLong(0);
 
-    @Around("execution(* com.ticketis.app.service.*Service.get*ById(..))")
+    @Around("execution(* com.ticketis.app.repository.TicketRepository.*(..))")
     public Object logCacheStatistics(ProceedingJoinPoint joinPoint) throws Throwable {
-        if (entityManagerFactory.getCache() == null) {
+        if (!cacheStatisticsProperties.isEnabled()) {
             return joinPoint.proceed();
         }
 
+        String methodName = joinPoint.getSignature().toShortString();
         Object[] args = joinPoint.getArgs();
-        if (args.length == 0 || args[0] == null) {
-            return joinPoint.proceed();
-        }
-
-        Object id = args[0];
-        Class<?> entityClass = extractEntityClassFromService(joinPoint);
         
-        if (entityClass == null) {
+        boolean isReadOperation = isReadOperation(methodName);
+        
+        if (!isReadOperation) {
             return joinPoint.proceed();
         }
 
-        Cache cache = entityManagerFactory.getCache();
-        boolean isInCache = cache.contains(entityClass, id);
+        Long entityId = extractEntityId(args);
+        
+        boolean wasInCache = false;
+        if (entityId != null) {
+            wasInCache = isEntityInCache(entityId);
+        }
 
         Object result = joinPoint.proceed();
 
-        if (isInCache && result != null) {
-            log.info("CACHE HIT: Entity {} with id {} was found in cache", 
-                    entityClass.getSimpleName(), id);
-        } else if (result != null) {
-            log.info("CACHE MISS: Entity {} with id {} was not in cache, loaded from database", 
-                    entityClass.getSimpleName(), id);
+        if (entityId != null) {
+            if (wasInCache) {
+                long hits = cacheHits.incrementAndGet();
+                long misses = cacheMisses.get();
+                long total = hits + misses;
+                
+                log.info("Ticket L2 Cache for '{}' (ID: {}): HIT - Total: Hits={}, Misses={}, Total={}",
+                        methodName,
+                        entityId,
+                        hits,
+                        misses,
+                        total);
+            } else {
+                long hits = cacheHits.get();
+                long misses = cacheMisses.incrementAndGet();
+                long total = hits + misses;
+                
+                log.info("Ticket L2 Cache for '{}' (ID: {}): MISS - Total: Hits={}, Misses={}, Total={}",
+                        methodName,
+                        entityId,
+                        hits,
+                        misses,
+                        total);
+            }
         }
 
         return result;
     }
 
-    private Class<?> extractEntityClassFromService(ProceedingJoinPoint joinPoint) {
+    private boolean isReadOperation(String methodName) {
+        String lowerMethodName = methodName.toLowerCase();
+        return lowerMethodName.contains("find") 
+            || lowerMethodName.contains("get")
+            || lowerMethodName.contains("exists")
+            || lowerMethodName.contains("count")
+            || lowerMethodName.contains("findall")
+            || lowerMethodName.contains("findone");
+    }
+
+    private Long extractEntityId(Object[] args) {
+        if (args == null || args.length == 0) {
+            return null;
+        }
+        
+        Object firstArg = args[0];
+        if (firstArg instanceof Long) {
+            return (Long) firstArg;
+        } else if (firstArg instanceof Number) {
+            return ((Number) firstArg).longValue();
+        }
+        
+        return null;
+    }
+
+    private boolean isEntityInCache(Long entityId) {
         try {
-            Class<?> returnType = ((org.aspectj.lang.reflect.MethodSignature) joinPoint.getSignature()).getReturnType();
-            if (returnType != null && !returnType.equals(Object.class) && !returnType.isPrimitive()) {
-                return returnType;
-            }
+            Cache cache = entityManager.getEntityManagerFactory().getCache();
+            return cache.contains(Ticket.class, entityId);
+        } catch (Exception e) {
+            log.debug("Failed to check cache for entity ID {}: {}", entityId, e.getMessage());
+            return false;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    private void logInfinispanStatistics() {
+        try {
+            SessionFactory sessionFactory = entityManager.getEntityManagerFactory()
+                    .unwrap(SessionFactory.class);
             
-            String className = joinPoint.getTarget().getClass().getSimpleName();
-            if (className.endsWith("Service")) {
-                String entityName = className.substring(0, className.length() - "Service".length());
-                try {
-                    return Class.forName("com.ticketis.app.model." + entityName);
-                } catch (ClassNotFoundException e) {
-                    log.debug("Could not find entity class: com.ticketis.app.model.{}", entityName);
+            if (sessionFactory instanceof SessionFactoryImplementor) {
+                SessionFactoryImplementor sfi = (SessionFactoryImplementor) sessionFactory;
+                CacheImplementor cacheImplementor = sfi.getCache();
+                
+                if (cacheImplementor != null) {
+                    Region region = cacheImplementor.getRegion(TICKET_CACHE_REGION);
+                    if (region != null) {
+                        log.debug("Cache region '{}' is available", TICKET_CACHE_REGION);
+                    }
                 }
             }
         } catch (Exception e) {
-            log.debug("Could not extract entity class: {}", e.getMessage());
+            log.debug("Could not access Infinispan statistics: {}", e.getMessage());
         }
-        return null;
     }
 }
+
