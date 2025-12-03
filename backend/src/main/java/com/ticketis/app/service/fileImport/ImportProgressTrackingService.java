@@ -22,10 +22,11 @@ public class ImportProgressTrackingService {
     private final ImportHistoryService importHistoryService;
     private final Map<Long, ImportProgress> progressMap = new ConcurrentHashMap<>();
 
-    public void initializeProgress(Long importHistoryId, int totalBatches, int totalRecords) {
+    public void initializeProgress(Long importHistoryId, int totalBatches, int totalRecords, boolean isAsync) {
         ImportProgress progress = new ImportProgress(importHistoryId, totalBatches, totalRecords);
         progressMap.put(importHistoryId, progress);
-        sendProgressEvent(progress, WebSocketEventType.ASYNC_IMPORT_PROGRESS_STARTED, "Import task initialized");
+        WebSocketEventType eventType = isAsync ? WebSocketEventType.ASYNC_IMPORT_PROGRESS_STARTED : WebSocketEventType.SYNC_IMPORT_PROGRESS_STARTED;
+        sendProgressEvent(progress, eventType, "Import task initialized");
 
         log.info("Initialized progress tracking for task: {}, total batches: {}, total records: {}", importHistoryId,
                 totalBatches, totalRecords);
