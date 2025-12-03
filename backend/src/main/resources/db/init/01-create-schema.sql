@@ -75,3 +75,18 @@ CREATE TABLE IF NOT EXISTS import_batches (
 );
 
 CREATE INDEX ticket_name ON tickets USING HASH (name);
+
+CREATE TABLE IF NOT EXISTS file_outbox (
+    id SERIAL PRIMARY KEY,
+    import_history_id BIGINT NOT NULL REFERENCES import_history(id),
+    operation VARCHAR(10) NOT NULL CHECK (operation IN ('UPLOAD', 'DELETE')),
+    file_name VARCHAR(500) NOT NULL,
+    file_path TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    processed_at TIMESTAMP NULL
+);
+
+CREATE INDEX idx_outbox_import_id ON file_outbox(import_history_id);
+CREATE INDEX idx_outbox_unprocessed ON file_outbox(created_at) WHERE processed_at IS NULL;
+
+CREATE PUBLICATION dbz_publication FOR TABLE file_outbox;

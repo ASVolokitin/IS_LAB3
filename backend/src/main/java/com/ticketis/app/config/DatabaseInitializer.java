@@ -26,7 +26,7 @@ public class DatabaseInitializer {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializer.class);
     private static final String INIT_SCRIPT_PATH = "db/init/01-create-schema.sql";
     private static final String[] REQUIRED_TABLES = { "locations", "venues", "events", "persons", "coordinates",
-            "tickets", "import_history", "import_batches" };
+            "tickets", "import_history", "import_batches", "file_outbox"};
 
     private final DataSource dataSource;
 
