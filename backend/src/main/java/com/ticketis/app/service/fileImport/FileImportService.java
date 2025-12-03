@@ -15,7 +15,7 @@ import com.ticketis.app.service.ImportValidator;
 import jakarta.persistence.RollbackException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.persistence.exceptions.DatabaseException;
+import org.hibernate.exception.GenericJDBCException;
 import org.postgresql.util.PSQLException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.file.Path;
 
 @Slf4j
 @Service
@@ -32,6 +34,7 @@ public class FileImportService {
     private final ImportHistoryService historyService;
     private final FileStorageService fileStorageService;
     private final ImportOrchestratorService orchestratorService;
+    private final FileOutboxService outboxService;
     private final WebSocketEventController webSocketEventController;
     private final ImportValidator validator;
 
@@ -47,13 +50,15 @@ public class FileImportService {
         try {
             validator.validateFile(file);
 
-            String uniqueFileName = fileStorageService.storeFile(file, importItem.getFilename()).getFileId();
-            ImportResult result = orchestratorService.startImport(uniqueFileName, entityType);
+            Path tmpFilePath = fileStorageService.storeFile(file, importItem.getFilename(), importItem.getId());
+
+            outboxService.createUploadEvent(importItem.getId(), importItem.getFilename(), String.valueOf(tmpFilePath));
+
+            ImportResult result = orchestratorService.startImport(importItem.getFilename(), entityType);
             String statusMessage = result.getMessage();
 
-
             return new ImportResponse(
-                    uniqueFileName,
+                    importItem.getFilename(),
                     file.getSize(),
                     statusMessage,
                     entityType,
@@ -82,9 +87,13 @@ public class FileImportService {
                     ((FileImportValidationException) e).getErrors());
         }
 
-        historyService.updateStatus(importItem.getId(), status, errorMessage);
-        ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_FAILED, importItem.getId());
-        webSocketEventController.sendImportEvent(event);
+        ImportHistoryItem currentItem = historyService.getImportItemById(importItem.getId());
+        if (currentItem.getImportStatus() != status) {
+            historyService.updateStatus(importItem.getId(), status, errorMessage);
+            ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_PROGRESS_FAILED,
+                    importItem.getId());
+            webSocketEventController.sendImportEvent(event);
+        }
         log.warn("Business error during import {}: {}", importItem.getId(), errorMessage);
     }
 
@@ -92,9 +101,13 @@ public class FileImportService {
         String detailedMessage = extractDatabaseErrorMessage(e);
         String errorMessage = detailedMessage != null ? detailedMessage : "System error: " + e.getMessage();
 
-        historyService.updateStatus(importItem.getId(), ImportStatus.FAILED, errorMessage);
-        ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_FAILED, importItem.getId());
-        webSocketEventController.sendImportEvent(event);
+        ImportHistoryItem currentItem = historyService.getImportItemById(importItem.getId());
+        if (currentItem.getImportStatus() != ImportStatus.FAILED) {
+            historyService.updateStatus(importItem.getId(), ImportStatus.FAILED, errorMessage);
+            ImportWebSocketEvent event = new ImportWebSocketEvent(WebSocketEventType.SYNC_IMPORT_PROGRESS_FAILED,
+                    importItem.getId());
+            webSocketEventController.sendImportEvent(event);
+        }
 
         log.error("System error during import {}: {}", importItem.getId(), errorMessage);
 
@@ -126,11 +139,11 @@ public class FileImportService {
             return extractDatabaseErrorMessage(throwable.getCause());
         }
 
-        if (throwable instanceof DatabaseException) {
-            DatabaseException dbEx = (DatabaseException) throwable;
-            Throwable internalException = dbEx.getInternalException();
-            if (internalException instanceof PSQLException) {
-                return extractConstraintViolationMessage(internalException.getMessage());
+        if (throwable instanceof GenericJDBCException) {
+            GenericJDBCException dbEx = (GenericJDBCException) throwable;
+            Throwable cause = dbEx.getCause();
+            if (cause instanceof PSQLException) {
+                return extractConstraintViolationMessage(cause.getMessage());
             }
             return extractConstraintViolationMessage(dbEx.getMessage());
         }
@@ -229,7 +242,7 @@ public class FileImportService {
 
         if (throwable instanceof TransactionSystemException ||
                 throwable instanceof RollbackException ||
-                throwable instanceof DatabaseException) {
+                throwable instanceof GenericJDBCException) {
             return isDatabaseConstraintError(throwable.getCause());
         }
 
