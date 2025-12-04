@@ -3,16 +3,17 @@ package com.ticketis.app.service.fileImport;
 import com.ticketis.app.exception.minio.MinioDeleteFileException;
 import com.ticketis.app.exception.minio.MinioException;
 import com.ticketis.app.exception.minio.MinioUploadFileException;
+import com.ticketis.app.repository.FileOutboxRepository;
 import com.ticketis.app.service.MinioService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -25,7 +26,7 @@ import java.util.Map;
 public class MinioOutboxHandler {
 
     private final MinioService minioService;
-    private final JdbcTemplate jdbcTemplate;
+    private final FileOutboxRepository fileOutboxRepository;
 
     @JmsListener(destination = "minio.operations.queue")
     @Transactional
@@ -48,7 +49,7 @@ public class MinioOutboxHandler {
                 return;
             }
 
-            markAsProcessed(id);
+            fileOutboxRepository.markAsProcessed(id, Instant.now());
 
             log.info("Successfully processed outbox event: {}", id);
 
@@ -104,11 +105,5 @@ public class MinioOutboxHandler {
                 return;
             }
         }
-    }
-
-    private void markAsProcessed(Long id) {
-        jdbcTemplate.update(
-                "UPDATE file_outbox SET processed_at = NOW() WHERE id = ?",
-                id);
     }
 }
